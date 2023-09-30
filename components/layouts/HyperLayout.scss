@@ -1,0 +1,10 @@
+@import "src/fi/sendanor/hyperapp/styles/hyperapp-variables";
+
+.hyper-layout {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: center;
+  transition: 0.7s;
+  min-height: 100vh;
+}
