@@ -13,7 +13,6 @@ import { useRouteServiceWithNavigate } from "../../../../hg/frontend/hooks/useRo
 // So, put components before layouts, and layouts before views. Otherwise layout's SCSS files will
 // overwrite SCSS from views and make your life harder.
 
-import { HyperLayout } from "../layouts/HyperLayout";
 import { HyperRoute } from "../types/HyperRoute";
 import { PropsWithClassName } from "../types/PropsWithClassName";
 import { PropsWithLanguage } from "../types/PropsWithLanguage";
@@ -29,7 +28,7 @@ export interface HyperAppProps
         PropsWithRouteList
 {
     readonly publicUrl : string;
-    readonly language : string;
+    readonly language  : string;
     readonly indexPath ?: string;
     readonly className ?: string;
     readonly routeList ?: readonly HyperRoute[];
@@ -57,9 +56,7 @@ export function HyperApp (
     const mainRoutes = {
         path: indexPath,
         element: (
-            <HyperLayout>
-                <Outlet />
-            </HyperLayout>
+            <Outlet />
         ),
         children: map(
             routeList,
@@ -75,30 +72,12 @@ export function HyperApp (
                     };
                 }
 
-                const view : ReactNode | undefined = route?.view;
+                const view : ReactNode | undefined = route?.element;
 
-                if (view) {
+                if ( view !== undefined ) {
                     return {
                         path: path,
-                        element: (
-                            <HyperView
-                                language={language}
-                                publicUrl={publicUrl}
-                                routePath={path}
-                            >{view}</HyperView>
-                        )
-                    };
-                }
-                if (view) {
-                    return {
-                        path: path,
-                        element: (
-                            <HyperView
-                                language={language}
-                                publicUrl={publicUrl}
-                                routePath={path}
-                            >{view}</HyperView>
-                        )
+                        element: view
                     };
                 }
 
