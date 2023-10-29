@@ -11,11 +11,6 @@ export interface HyperProps {
     readonly definitions : HyperDTO;
 
     /**
-     * The name of the app to use
-     */
-    readonly app : string;
-
-    /**
      * The node renderer
      */
     readonly renderer : HyperRenderer;
@@ -27,10 +22,8 @@ export function Hyper (
 ) {
     const renderer : HyperRenderer = props.renderer;
     const definitions : HyperDTO = props.definitions;
-    const appName : string = props.app;
-    console.log('WOOT: Hyper: definitions = ', appName, definitions);
+    console.log('WOOT: Hyper: definitions = ', definitions);
     return renderer.renderApp(
-        appName,
         definitions,
     );
 }

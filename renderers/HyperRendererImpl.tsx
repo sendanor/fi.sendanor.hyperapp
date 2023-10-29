@@ -4,14 +4,12 @@ import { ReactNode, Fragment } from "react";
 import { map } from "../../../hg/core/functions/map";
 import { isArray } from "../../../hg/core/types/Array";
 import { isString } from "../../../hg/core/types/String";
-import { HyperAppDTO } from "../../hyperstack/dto/HyperAppDTO";
 import { HyperComponentContent, HyperComponentDTO, isHyperComponentDTO } from "../../hyperstack/dto/HyperComponentDTO";
 import { HyperDTO } from "../../hyperstack/dto/HyperDTO";
 import { HyperRouteDTO } from "../../hyperstack/dto/HyperRouteDTO";
 import { HyperStyleDTO } from "../../hyperstack/dto/HyperStyleDTO";
 import { HyperViewDTO } from "../../hyperstack/dto/HyperViewDTO";
 import { HyperComponent } from "../../hyperstack/dto/types/HyperComponent";
-import { findAndPopulateHyperAppDTO } from "../../hyperstack/utils/apps/findAndPopulateHyperAppDTO";
 import { findAndPopulateHyperViewDTO } from "../../hyperstack/utils/views/findAndPopulateHyperViewDTO";
 import { populateHyperComponentDTO } from "../../hyperstack/utils/components/populateHyperComponentDTO";
 import { HyperApp } from "../components/apps/HyperApp";
@@ -66,25 +64,20 @@ export class HyperRendererImpl implements HyperRenderer {
      */
     public renderRoute (
         item        : HyperRouteDTO,
-        app         : HyperAppDTO,
         definitions : HyperDTO,
     ) : HyperRoute {
-        return this._routeRenderer(item, app, definitions);
+        return this._routeRenderer(item, definitions);
     }
 
     /**
      * @inheritDoc
      */
     public renderRouteList (
-        appName: string,
         definitions: HyperDTO,
     ) : readonly HyperRoute[] {
-        console.log(`WOOT: renderRouteList: findAndPopulateHyperAppDTO: appName = `, appName, definitions.apps);
-        const app : HyperAppDTO = findAndPopulateHyperAppDTO(appName, definitions.apps);
-        console.log(`WOOT: renderRouteList: app = `, app);
         return map(
-            app.routes,
-            (item: HyperRouteDTO): HyperRoute => this.renderRoute( item, app, definitions )
+            definitions.routes,
+            (item: HyperRouteDTO): HyperRoute => this.renderRoute( item, definitions )
         );
     }
 
@@ -92,13 +85,10 @@ export class HyperRendererImpl implements HyperRenderer {
      * @inheritDoc
      */
     public renderApp (
-        appName     : string,
         definitions : HyperDTO,
     ) : ReactNode {
-        console.log(`WOOT: renderApp: findAndPopulateHyperAppDTO: = `, appName, definitions.apps);
-        const app : HyperAppDTO = findAndPopulateHyperAppDTO(appName, definitions.apps);
-        console.log(`WOOT: renderApp: app = `, app);
-        return this._appRenderer(app, definitions);
+        console.log(`WOOT: renderApp: findAndPopulateHyperAppDTO: = `, definitions);
+        return this._appRenderer(definitions);
     }
 
     /**
@@ -106,16 +96,11 @@ export class HyperRendererImpl implements HyperRenderer {
      */
     public renderView (
         viewName    : string,
-        appName     : string,
         routePath   : string,
         definitions : HyperDTO,
     ) : ReactNode {
         const view : HyperViewDTO = findAndPopulateHyperViewDTO(viewName, definitions.views);
-        console.log(`WOOT: renderView: view = `, view);
-        console.log(`WOOT: renderView: findAndPopulateHyperAppDTO: `, appName, definitions.apps);
-        const app  : HyperAppDTO  = findAndPopulateHyperAppDTO(appName, definitions.apps);
-        console.log(`WOOT: renderView: app = `, app);
-        return this._viewRenderer(view, app, routePath, definitions);
+        return this._viewRenderer(view, routePath, definitions);
     }
 
     /**
@@ -137,17 +122,15 @@ export class HyperRendererImpl implements HyperRenderer {
      */
     public static defaultRenderApp (
         renderer    : HyperRenderer,
-        app         : HyperAppDTO,
         definitions : HyperDTO,
     ) : ReactNode {
-        const publicUrl : string | undefined = app.publicUrl ?? '';
-        const language : string | undefined = app.language ?? 'en';
-        console.log(`WOOT: defaultRenderApp: `, app, definitions);
+        const publicUrl : string | undefined = definitions.publicUrl ?? '';
+        const language : string | undefined = definitions.language ?? 'en';
         return (
             <HyperApp
                 publicUrl={publicUrl}
                 language={language}
-                routeList={ renderer.renderRouteList(app.name, definitions) }
+                routeList={ renderer.renderRouteList(definitions) }
             />
         );
     }
@@ -162,12 +145,10 @@ export class HyperRendererImpl implements HyperRenderer {
     public static defaultRenderRoute (
         renderer    : HyperRenderer,
         item        : HyperRouteDTO,
-        app         : HyperAppDTO,
         definitions : HyperDTO,
     ) : HyperRoute {
 
         console.log(`WOOT: defaultRenderRoute: item = `, item);
-        console.log(`WOOT: defaultRenderRoute: app = `, app);
         console.log(`WOOT: defaultRenderRoute: definitions = `, definitions);
 
         if ( item.redirect ) {
@@ -189,7 +170,6 @@ export class HyperRendererImpl implements HyperRenderer {
             undefined,
             renderer.renderView(
                 item.view,
-                app.name,
                 item.path,
                 definitions,
             ),
@@ -208,12 +188,11 @@ export class HyperRendererImpl implements HyperRenderer {
     public static defaultRenderView (
         renderer    : HyperRenderer,
         view        : HyperViewDTO,
-        app         : HyperAppDTO,
         routePath   : string,
         definitions : HyperDTO,
     ) : ReactNode {
-        const language  : string | undefined = view.language  ?? app.language  ?? 'en';
-        const publicUrl : string | undefined = view.publicUrl ?? app.publicUrl ?? '';
+        const language  : string = view.language  ?? definitions.language  ?? 'en';
+        const publicUrl : string = view.publicUrl ?? definitions.publicUrl ?? '';
         const style     : HyperStyleDTO      = view.style     ?? {};
         return (
             <HyperView

@@ -1,7 +1,6 @@
 // Copyright (c) 2023. Sendanor <info@sendanor.fi>. All rights reserved.
 
 import { ReactNode } from "react";
-import { HyperAppDTO } from "../../hyperstack/dto/HyperAppDTO";
 import { HyperComponentContent, HyperComponentDTO } from "../../hyperstack/dto/HyperComponentDTO";
 import { HyperDTO } from "../../hyperstack/dto/HyperDTO";
 import { HyperRouteDTO } from "../../hyperstack/dto/HyperRouteDTO";
@@ -10,7 +9,6 @@ import { HyperRoute } from "../components/types/HyperRoute";
 
 export interface HyperAppRenderer {
     (
-        app         : HyperAppDTO,
         definitions : HyperDTO,
     ) : ReactNode;
 }
@@ -18,7 +16,6 @@ export interface HyperAppRenderer {
 export interface HyperViewRenderer {
     (
         view        : HyperViewDTO,
-        app         : HyperAppDTO,
         routePath   : string,
         definitions : HyperDTO,
     ) : ReactNode;
@@ -41,7 +38,6 @@ export interface HyperComponentRenderer {
 export interface HyperRouteRenderer {
     (
         item        : HyperRouteDTO,
-        app         : HyperAppDTO,
         definitions : HyperDTO,
     ) : HyperRoute;
 }
@@ -56,11 +52,9 @@ export interface HyperRenderer {
 
     /**
      *
-     * @param appName
      * @param definitions
      */
     renderApp (
-        appName     : string,
         definitions : HyperDTO,
     ) : ReactNode;
 
@@ -73,35 +67,29 @@ export interface HyperRenderer {
     /**
      *
      * @param item
-     * @param app
      * @param definitions
      */
     renderRoute (
         item        : HyperRouteDTO,
-        app         : HyperAppDTO,
         definitions : HyperDTO,
     ) : HyperRoute;
 
     /**
      *
-     * @param appName
      * @param definitions
      */
     renderRouteList (
-        appName     : string,
         definitions : HyperDTO,
     ) : readonly HyperRoute[];
 
     /**
      *
      * @param viewName
-     * @param appName
      * @param routePath
      * @param definitions
      */
     renderView (
         viewName    : string,
-        appName     : string,
         routePath   : string,
         definitions : HyperDTO,
     ) : ReactNode;
