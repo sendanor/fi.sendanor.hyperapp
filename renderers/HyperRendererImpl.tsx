@@ -88,7 +88,6 @@ export class HyperRendererImpl implements HyperRenderer {
     public renderApp (
         definitions : HyperDTO,
     ) : ReactNode {
-        console.log(`WOOT: renderApp: findAndPopulateHyperAppDTO: = `, definitions);
         return this._appRenderer(definitions);
     }
 
@@ -148,9 +147,6 @@ export class HyperRendererImpl implements HyperRenderer {
         item        : HyperRouteDTO,
         definitions : HyperDTO,
     ) : HyperRoute {
-
-        console.log(`WOOT: defaultRenderRoute: item = `, item);
-        console.log(`WOOT: defaultRenderRoute: definitions = `, definitions);
 
         if ( item.redirect ) {
             return createHyperRoute(
@@ -216,8 +212,6 @@ export class HyperRendererImpl implements HyperRenderer {
         if (populatedComponent.name === HyperComponent.Article) {
             return <HyperArticle>{HyperRendererImpl.defaultRenderContent(renderer, content.content, definitions)}</HyperArticle>
         }
-
-        console.log('WOOT: populatedComponent = ', populatedComponent);
 
         return <>{JSON.stringify(content)}</>;
     }
