@@ -2,5 +2,8 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
-  testTimeout: 30000
+  testTimeout: 30000,
+  moduleNameMapper: {
+    "\\.(scss)$": "<rootDir>/empty-module.js",
+  },
 };
