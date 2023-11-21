@@ -1,9 +1,12 @@
 // Copyright (c) 2023. Sendanor <info@sendanor.fi>. All rights reserved.
 
+import { useCallback } from "react";
+import { useServiceEvent } from "../../../../hg/frontend/hooks/useServiceEvent";
 import { HyperDTO } from "../../../hyperstack/dto/HyperDTO";
 import { createLoadingAppDefinition } from "../../../hyperstack/samples/loading/LoadingAppDefinition";
 import { useHyperDefinitions } from "../../hooks/useHyperDefinitions";
 import { HyperRenderer } from "../../renderers/HyperRenderer";
+import { HyperService, HyperServiceEvent } from "../../services/HyperService";
 
 export interface HyperProps {
 
@@ -20,7 +23,7 @@ export interface HyperProps {
 }
 
 const LOADING_APP = createLoadingAppDefinition(
-    'loadingApp',
+    'LoadingApp',
     '',
     'en',
 );
@@ -30,6 +33,39 @@ export function Hyper (
 ) {
     const renderer : HyperRenderer = props.renderer;
     const definitions : HyperDTO | string = props.definitions;
-    const [dto] = useHyperDefinitions(definitions);
+    const [dto, refreshCallback] = useHyperDefinitions(definitions);
+
+    const updateAppCallback = useCallback(
+        (eventName: string, name : string) => {
+            // FIXME: Implement better logic
+            refreshCallback();
+        }, [
+            refreshCallback
+        ]
+    );
+
+    const updateViewCallback = useCallback(
+        (eventName: string, name: string) => {
+            // FIXME: Implement better logic
+            refreshCallback();
+        }, [
+            refreshCallback
+        ]
+    );
+
+    // When language in our service changes
+    useServiceEvent(
+        HyperService,
+        HyperServiceEvent.UPDATE_APP,
+        updateAppCallback,
+    );
+
+    // When language in our service changes
+    useServiceEvent(
+        HyperService,
+        HyperServiceEvent.UPDATE_VIEW,
+        updateViewCallback,
+    );
+
     return renderer.renderApp( dto ?? LOADING_APP );
 }

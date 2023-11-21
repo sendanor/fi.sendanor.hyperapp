@@ -1,9 +1,11 @@
 // Copyright (c) 2022-2023. Heusala Group Oy <info@heusalagroup.fi>. All rights reserved.
 
-import { PropsWithChildren, ReactNode } from "react";
+import { PropsWithChildren, ReactNode, useEffect } from "react";
+import { LogService } from "../../../../hg/core/LogService";
 import { ScrollToHere } from "../../../../hg/frontend/components/common/scrollToHere/ScrollToHere";
 import { HYPER_VIEW_CLASS_NAME } from "../../../hyperstack/constants/classNames";
 import { getCssStyles, HyperStyleDTO } from "../../../hyperstack/dto/HyperStyleDTO";
+import { HyperService } from "../../services/HyperService";
 import { SEO } from "../seo/SEO";
 import { useLocation } from "react-router-dom";
 import { PropsWithClassName } from "../types/PropsWithClassName";
@@ -11,6 +13,8 @@ import { PropsWithLanguage } from "../types/PropsWithLanguage";
 import { PropsWithPublicUrl } from "../types/PropsWithPublicUrl";
 import { PropsWithRoute } from "../types/PropsWithRoute";
 import "./HyperView.scss";
+
+const LOG = LogService.createLogger( 'HyperView' );
 
 export interface HyperViewProps
     extends
@@ -20,6 +24,7 @@ export interface HyperViewProps
         PropsWithPublicUrl,
         PropsWithLanguage
 {
+    readonly name            : string;
     readonly publicUrl       : string;
     readonly routePath       : string;
     readonly children       ?: ReactNode;
@@ -32,6 +37,7 @@ export interface HyperViewProps
 
 export function HyperView (props: HyperViewProps) {
     const className = props?.className;
+    const name : string = props.name;
     const publicUrl : string = props.publicUrl;
     const language : string = props.language;
     const routePath : string = props.routePath;
@@ -41,6 +47,12 @@ export function HyperView (props: HyperViewProps) {
     const seoSiteName : string = props?.seoSiteName ?? '';
     const children = props?.children ?? null;
     const location = useLocation();
+    useEffect( () => {
+        LOG.debug(`name = `, name);
+        HyperService.updateView(name);
+    }, [
+        name
+    ] );
     return (
         <div
             className={

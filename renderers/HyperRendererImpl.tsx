@@ -1,7 +1,10 @@
 // Copyright (c) 2023. Sendanor <info@sendanor.fi>. All rights reserved.
 
 import { ReactNode, Fragment } from "react";
+import { Link } from "react-router-dom";
 import { map } from "../../../hg/core/functions/map";
+import { startsWith } from "../../../hg/core/functions/startsWith";
+import { LogService } from "../../../hg/core/LogService";
 import { isArray } from "../../../hg/core/types/Array";
 import { isString } from "../../../hg/core/types/String";
 import { Button } from "../../../hg/frontend/components/button/Button";
@@ -13,11 +16,15 @@ import { HyperViewDTO } from "../../hyperstack/dto/HyperViewDTO";
 import { HyperComponent } from "../../hyperstack/dto/types/HyperComponent";
 import { findAndPopulateHyperViewDTO } from "../../hyperstack/utils/views/findAndPopulateHyperViewDTO";
 import { populateHyperComponentDTO } from "../../hyperstack/utils/components/populateHyperComponentDTO";
+import { HyperActionButton } from "../components/actionButton/HyperActionButton";
 import { HyperApp } from "../components/apps/HyperApp";
 import { HyperArticle } from "../components/article/HyperArticle";
 import { createHyperRoute, HyperRoute } from "../components/types/HyperRoute";
 import { HyperView } from "../components/views/HyperView";
+import { RemoteHyperView } from "../components/views/RemoteHyperView";
 import { HyperAppRenderer, HyperContentRenderer, HyperRenderer, HyperRouteRenderer, HyperViewRenderer } from "./HyperRenderer";
+
+const LOG = LogService.createLogger( 'HyperRendererImpl' );
 
 export class HyperRendererImpl implements HyperRenderer {
 
@@ -188,11 +195,14 @@ export class HyperRendererImpl implements HyperRenderer {
         routePath   : string,
         definitions : HyperDTO,
     ) : ReactNode {
+        const viewName = view.name;
+        LOG.debug(`rendering view: `, viewName);
         const language  : string = view.language  ?? definitions.language  ?? 'en';
         const publicUrl : string = view.publicUrl ?? definitions.publicUrl ?? '';
-        const style     : HyperStyleDTO      = view.style     ?? {};
+        const style     : HyperStyleDTO = view.style ?? {};
         return (
             <HyperView
+                name={viewName}
                 language={language}
                 publicUrl={publicUrl}
                 routePath={routePath}
@@ -222,6 +232,11 @@ export class HyperRendererImpl implements HyperRenderer {
         definitions : HyperDTO,
     ) : ReactNode {
 
+        const internalRoutePaths : readonly string[] = map(
+            definitions?.routes,
+            (route: HyperRouteDTO) : string => route.path
+        );
+
         if (isArray(content)) {
             const fragmentId : number = HyperRendererImpl._getNextFragmentId();
             return <>{map(
@@ -240,20 +255,72 @@ export class HyperRendererImpl implements HyperRenderer {
 
             const populatedComponent : HyperComponentDTO = populateHyperComponentDTO(content, definitions.components);
 
+            if (populatedComponent.name === HyperComponent.ActionButton) {
+
+                // FIXME: This should default to the current route
+                const hrefData = content?.meta?.href;
+                const href : string | undefined = isString(hrefData) ? hrefData : undefined;
+
+                const methodData = content?.meta?.method;
+                const method : string | undefined = isString(methodData) ? methodData : undefined;
+
+                // FIXME: This should default to the current route
+                const successRedirectData = content?.meta?.successRedirect;
+                const successRedirect : string | undefined = isString(successRedirectData) ? successRedirectData : undefined;
+
+                // FIXME: This should default to the current route
+                const failureRedirectData = content?.meta?.failureRedirect;
+                const failureRedirect : string | undefined = isString(failureRedirectData) ? failureRedirectData : undefined;
+
+                const body = content?.meta?.body;
+
+                return (
+                    <HyperActionButton
+                        target={href}
+                        method={method}
+                        successRedirect={successRedirect}
+                        failureRedirect={failureRedirect}
+                        body={body}
+                    >{HyperRendererImpl.defaultRenderContent(renderer, content.content, definitions)}</HyperActionButton>
+                );
+            }
+
             if (populatedComponent.name === HyperComponent.Article) {
-                return <HyperArticle>{HyperRendererImpl.defaultRenderContent(renderer, content.content, definitions)}</HyperArticle>
+                return <HyperArticle>{HyperRendererImpl.defaultRenderContent(renderer, content.content, definitions)}</HyperArticle>;
+            }
+
+            if (populatedComponent.name === HyperComponent.Table) {
+                return <table>{HyperRendererImpl.defaultRenderContent(renderer, content.content, definitions)}</table>;
+            }
+
+            if (populatedComponent.name === HyperComponent.TableRow) {
+                return <tr>{HyperRendererImpl.defaultRenderContent(renderer, content.content, definitions)}</tr>;
+            }
+
+            if (populatedComponent.name === HyperComponent.TableColumn) {
+                return <td>{HyperRendererImpl.defaultRenderContent(renderer, content.content, definitions)}</td>;
             }
 
             if (populatedComponent.name === HyperComponent.Button) {
-                return <Button>{HyperRendererImpl.defaultRenderContent(renderer, content.content, definitions)}</Button>
+                return <Button>{HyperRendererImpl.defaultRenderContent(renderer, content.content, definitions)}</Button>;
             }
 
             if (populatedComponent.name === HyperComponent.LinkButton) {
-                return <a className={"hg-button"} href={ isString(populatedComponent.meta?.href) ? populatedComponent.meta?.href : '#' }>{HyperRendererImpl.defaultRenderContent(renderer, content.content, definitions)}</a>
+                const hrefData = populatedComponent.meta?.href;
+                const href : string = isString(hrefData) ? hrefData : '#';
+                if (internalRoutePaths.includes(href)) {
+                    return <Link className={"hg-button"} to={ href }>{HyperRendererImpl.defaultRenderContent(renderer, content.content, definitions)}</Link>
+                }
+                return <a className={"hg-button"} href={ href }>{HyperRendererImpl.defaultRenderContent(renderer, content.content, definitions)}</a>
             }
 
             if (populatedComponent.name === HyperComponent.Link) {
-                return <a href={ isString(populatedComponent.meta?.href) ? populatedComponent.meta?.href : '#' }>{HyperRendererImpl.defaultRenderContent(renderer, content.content, definitions)}</a>
+                const hrefData = populatedComponent.meta?.href;
+                const href : string = isString(hrefData) ? hrefData : '#';
+                if (internalRoutePaths.includes(href)) {
+                    return <Link to={ href }>{HyperRendererImpl.defaultRenderContent(renderer, content.content, definitions)}</Link>
+                }
+                return <a href={ href }>{HyperRendererImpl.defaultRenderContent(renderer, content.content, definitions)}</a>
             }
 
             if (populatedComponent.name === HyperComponent.Div) {

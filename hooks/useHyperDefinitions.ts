@@ -7,6 +7,10 @@ import { RefreshCallback, useAsyncResource } from "../../../hg/frontend/hooks/us
 import { explainHyperDTO, HyperDTO, isHyperDTO } from "../../hyperstack/dto/HyperDTO";
 import { populateHyperDTO } from "../../hyperstack/utils/populateHyperDTO";
 
+/**
+ *
+ * @param definitions
+ */
 export function useHyperDefinitions (
     definitions : HyperDTO | string
 ) : [HyperDTO | null | undefined, RefreshCallback] {

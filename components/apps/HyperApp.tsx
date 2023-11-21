@@ -85,6 +85,7 @@ export function HyperApp (
                     path: path,
                     element: (
                         <HyperView
+                            name={'Hyper.NoContentView'}
                             language={language}
                             publicUrl={publicUrl}
                             routePath={path}

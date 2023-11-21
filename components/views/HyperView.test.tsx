@@ -11,6 +11,7 @@ jest.mock('react-helmet-async', () => {
 
 describe('HyperView Component', () => {
     const defaultProps: HyperViewProps = {
+        name: 'ViewName',
         publicUrl: 'https://example.com',
         routePath: '/test',
         language: 'en',
