@@ -13,6 +13,7 @@ import { HyperRouteDTO } from "../../hyperstack/dto/HyperRouteDTO";
 import { HyperStyleDTO } from "../../hyperstack/dto/HyperStyleDTO";
 import { HyperViewDTO } from "../../hyperstack/dto/HyperViewDTO";
 import { HyperComponent } from "../../hyperstack/dto/types/HyperComponent";
+import { HyperAction, isHyperActionOrStringOrUndefined } from "../../hyperstack/types/HyperAction";
 import { findAndPopulateHyperViewDTO } from "../../hyperstack/utils/views/findAndPopulateHyperViewDTO";
 import { populateHyperComponentDTO } from "../../hyperstack/utils/components/populateHyperComponentDTO";
 import { HyperActionButton } from "../components/actionButton/HyperActionButton";
@@ -295,11 +296,11 @@ export class HyperRendererImpl implements HyperRenderer {
 
                 // FIXME: This should default to the current route
                 const successRedirectData = content?.meta?.successRedirect;
-                const successRedirect : string | undefined = isString(successRedirectData) ? successRedirectData : undefined;
+                const successRedirect : string | HyperAction | undefined = isHyperActionOrStringOrUndefined(successRedirectData) ? successRedirectData : undefined;
 
                 // FIXME: This should default to the current route
                 const failureRedirectData = content?.meta?.failureRedirect;
-                const failureRedirect : string | undefined = isString(failureRedirectData) ? failureRedirectData : undefined;
+                const failureRedirect : string | HyperAction | undefined = isHyperActionOrStringOrUndefined(failureRedirectData) ? failureRedirectData : undefined;
 
                 const body = content?.meta?.body;
 

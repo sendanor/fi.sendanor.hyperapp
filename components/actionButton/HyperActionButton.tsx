@@ -2,12 +2,15 @@
 
 import { PropsWithChildren, ReactNode, useCallback } from "react";
 import { HttpService } from "../../../../hg/core/HttpService";
-import { ReadonlyJsonAny, ReadonlyJsonObject } from "../../../../hg/core/Json";
+import { ReadonlyJsonAny } from "../../../../hg/core/Json";
 import { LogService } from "../../../../hg/core/LogService";
 import { parseRequestMethod, RequestMethod, stringifyRequestMethod } from "../../../../hg/core/request/types/RequestMethod";
+import { isString } from "../../../../hg/core/types/String";
 import { Button } from "../../../../hg/frontend/components/button/Button";
 import { RouteService } from "../../../../hg/frontend/services/RouteService";
 import { HYPER_ARTICLE_CLASS_NAME } from "../../../hyperstack/constants/classNames";
+import { isHyperViewDTO } from "../../../hyperstack/dto/HyperViewDTO";
+import { HyperAction, isHyperAction } from "../../../hyperstack/types/HyperAction";
 import { PropsWithClassName } from "../types/PropsWithClassName";
 import "./HyperActionButton.scss";
 
@@ -23,8 +26,8 @@ export interface HyperActionButtonProps
     readonly method    ?: string;
     readonly target    ?: string;
     readonly body      ?: ReadonlyJsonAny | undefined;
-    readonly successRedirect ?: string;
-    readonly failureRedirect ?: string;
+    readonly successRedirect ?: string | HyperAction | undefined;
+    readonly failureRedirect ?: string | HyperAction | undefined;
 }
 
 async function doRequest (
@@ -42,6 +45,50 @@ async function doRequest (
             throw new TypeError(`Unsupported method: ${stringifyRequestMethod(requestMethod)}`);
     }
 }
+
+async function handleRedirect (
+    redirect: HyperAction | string | undefined,
+    response: ReadonlyJsonAny | undefined,
+) : Promise<void> {
+
+    if (isString(redirect)) {
+        RouteService.setRoute( redirect );
+        return;
+    }
+
+    if (isHyperAction(redirect)) {
+        try {
+            const method = redirect.method ?? "POST";
+            const target = redirect.target;
+            const body = redirect?.body ?? response;
+            LOG.debug(`Calling ${method} ${target} with `, body);
+            const nextResponse : ReadonlyJsonAny | undefined = await doRequest(
+                method,
+                target,
+                body,
+            );
+            LOG.debug(`Response from ${method} ${target}: `, nextResponse);
+
+            if (redirect.successRedirect === undefined && isHyperViewDTO(nextResponse) && nextResponse.extend ) {
+                RouteService.setRoute( nextResponse.extend );
+                return;
+            }
+
+            return await handleRedirect(redirect.successRedirect, nextResponse);
+        } catch (err : any) {
+            LOG.error(`handleRedirect: Exception: `, err);
+            return await handleRedirect(redirect.errorRedirect, err);
+        }
+    }
+
+    if (redirect === undefined) {
+        LOG.info(`handleRedirect: No redirect defined.`);
+    } else {
+        LOG.warn(`Warning! Redirection object was not recognized: `, redirect);
+    }
+
+}
+
 
 export function HyperActionButton (props: HyperActionButtonProps) {
 
@@ -62,17 +109,15 @@ export function HyperActionButton (props: HyperActionButtonProps) {
                 return;
             }
 
-            doRequest(method, target, body).then( () => {
-                if (successRedirect) {
-                    RouteService.setRoute(successRedirect);
-                } else {
-                    LOG.info(`Action was successful. No successRedirect defined.`);
-                }
-            }).catch((err: any) => {
+            doRequest(
+                method,
+                target,
+                body
+            ).then( async (response) : Promise<void> => {
+                await handleRedirect(successRedirect, response);
+            }).catch( async (err: any) => {
                 LOG.error(`Exception: `, err);
-                if (failureRedirect) {
-                    RouteService.setRoute(failureRedirect);
-                }
+                await handleRedirect(failureRedirect, err);
             });
 
         }, [
