@@ -1,40 +1,69 @@
-// Copyright (c) 2023. Heusala Group Oy <info@heusalagroup.fi>. All rights reserved.
+// Copyright (c) 2023. Sendanor <info@sendanor.fi>. All rights reserved.
 
-import { LogService } from "../../../hg/core/LogService";
-import { Observer, ObserverCallback, ObserverDestructor } from "../../../hg/core/Observer";
-
-const LOG = LogService.createLogger( 'HyperService' );
+import { ObserverCallback, ObserverDestructor } from "../../../hg/core/Observer";
+import { Disposable } from "../../../hg/core/types/Disposable";
 
 export enum HyperServiceEvent {
     UPDATE_APP = "HyperService:updateApp",
     UPDATE_VIEW = "HyperService:updateView",
+    ACTIVATE_VIEW = "HyperService:activateView",
+    DEACTIVATE_VIEW = "HyperService:deactivateView",
 }
 
 export type HyperServiceDestructor = ObserverDestructor;
 
-export class HyperService {
+/**
+ * Service which keeps track of state of the Hyper frontend components on the
+ * frontend side.
+ *
+ * This interface describes the static public interface for the `HyperServiceImpl`.
+ */
+export interface HyperService extends Disposable {
 
-    private static _observer: Observer<HyperServiceEvent> = new Observer<HyperServiceEvent>( "HyperService" );
+    /**
+     *
+     */
+    Event : HyperServiceEvent;
 
-    public static Event = HyperServiceEvent;
-
-    public static on (
+    /**
+     *
+     * @param name
+     * @param callback
+     */
+    on (
         name: HyperServiceEvent,
         callback: ObserverCallback<HyperServiceEvent>
-    ): HyperServiceDestructor {
-        return this._observer.listenEvent( name, callback );
-    }
+    ): HyperServiceDestructor;
 
-    public static destroy (): void {
-        this._observer.destroy();
-    }
+    /**
+     *
+     * @param name
+     */
+    updateApp (name : string) : void;
 
-    public static updateApp (name : string) : void {
-        this._observer.triggerEvent(HyperServiceEvent.UPDATE_APP, name);
-    }
+    /**
+     *
+     * @param name
+     */
+    updateView (name : string) : void;
 
-    public static updateView (name : string) : void {
-        this._observer.triggerEvent(HyperServiceEvent.UPDATE_VIEW, name);
-    }
+    /**
+     *
+     * @param name
+     */
+    activateView (name : string) : void;
+
+    /**
+     *
+     * @param name
+     */
+    deactivateView (name : string) : void;
+
+    /**
+     * Returns `true` if the view by name is active.
+     *
+     * @param name
+     */
+    isViewActive (name : string) : boolean;
 
 }

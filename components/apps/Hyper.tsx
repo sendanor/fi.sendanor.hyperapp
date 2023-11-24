@@ -6,7 +6,8 @@ import { HyperDTO } from "../../../hyperstack/dto/HyperDTO";
 import { createLoadingAppDefinition } from "../../../hyperstack/samples/loading/LoadingAppDefinition";
 import { useHyperDefinitions } from "../../hooks/useHyperDefinitions";
 import { HyperRenderer } from "../../renderers/HyperRenderer";
-import { HyperService, HyperServiceEvent } from "../../services/HyperService";
+import { HyperServiceEvent } from "../../services/HyperService";
+import { HyperServiceImpl } from "../../services/HyperServiceImpl";
 
 export interface HyperProps {
 
@@ -55,14 +56,14 @@ export function Hyper (
 
     // When language in our service changes
     useServiceEvent(
-        HyperService,
+        HyperServiceImpl,
         HyperServiceEvent.UPDATE_APP,
         updateAppCallback,
     );
 
     // When language in our service changes
     useServiceEvent(
-        HyperService,
+        HyperServiceImpl,
         HyperServiceEvent.UPDATE_VIEW,
         updateViewCallback,
     );

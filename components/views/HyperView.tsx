@@ -1,11 +1,11 @@
-// Copyright (c) 2022-2023. Heusala Group Oy <info@heusalagroup.fi>. All rights reserved.
+// Copyright (c) 2023. Sendanor <info@sendanor.fi>. All rights reserved.
 
 import { PropsWithChildren, ReactNode, useEffect } from "react";
 import { LogService } from "../../../../hg/core/LogService";
 import { ScrollToHere } from "../../../../hg/frontend/components/common/scrollToHere/ScrollToHere";
 import { HYPER_VIEW_CLASS_NAME } from "../../../hyperstack/constants/classNames";
 import { getCssStyles, HyperStyleDTO } from "../../../hyperstack/dto/HyperStyleDTO";
-import { HyperService } from "../../services/HyperService";
+import { HyperServiceImpl } from "../../services/HyperServiceImpl";
 import { SEO } from "../seo/SEO";
 import { useLocation } from "react-router-dom";
 import { PropsWithClassName } from "../types/PropsWithClassName";
@@ -48,8 +48,11 @@ export function HyperView (props: HyperViewProps) {
     const children = props?.children ?? null;
     const location = useLocation();
     useEffect( () => {
-        LOG.debug(`name = `, name);
-        HyperService.updateView(name);
+        LOG.debug(`Active view: `, name);
+        HyperServiceImpl.activateView(name);
+        return () => {
+            HyperServiceImpl.deactivateView(name);
+        };
     }, [
         name
     ] );

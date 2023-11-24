@@ -3,7 +3,6 @@
 import { ReactNode, Fragment } from "react";
 import { Link } from "react-router-dom";
 import { map } from "../../../hg/core/functions/map";
-import { startsWith } from "../../../hg/core/functions/startsWith";
 import { LogService } from "../../../hg/core/LogService";
 import { isArray } from "../../../hg/core/types/Array";
 import { isString } from "../../../hg/core/types/String";
@@ -21,7 +20,6 @@ import { HyperApp } from "../components/apps/HyperApp";
 import { HyperArticle } from "../components/article/HyperArticle";
 import { createHyperRoute, HyperRoute } from "../components/types/HyperRoute";
 import { HyperView } from "../components/views/HyperView";
-import { RemoteHyperView } from "../components/views/RemoteHyperView";
 import { HyperAppRenderer, HyperContentRenderer, HyperRenderer, HyperRouteRenderer, HyperViewRenderer } from "./HyperRenderer";
 
 const LOG = LogService.createLogger( 'HyperRendererImpl' );
@@ -196,7 +194,7 @@ export class HyperRendererImpl implements HyperRenderer {
         definitions : HyperDTO,
     ) : ReactNode {
         const viewName = view.name;
-        LOG.debug(`rendering view: `, viewName);
+        LOG.debug(`Rendering view: `, viewName);
         const language  : string = view.language  ?? definitions.language  ?? 'en';
         const publicUrl : string = view.publicUrl ?? definitions.publicUrl ?? '';
         const style     : HyperStyleDTO = view.style ?? {};
