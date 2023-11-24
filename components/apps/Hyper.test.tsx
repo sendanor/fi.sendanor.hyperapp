@@ -14,7 +14,7 @@ describe('Hyper Component', () => {
     describe('Hyper Component', () => {
 
         it('renders without crashing', () => {
-            const hyperRendererImpl = HyperRendererImpl.create();
+            const hyperRendererImpl = HyperRendererImpl.create('https://localhost:3000');
 
             const { container } = render(
                 <MemoryRouter>

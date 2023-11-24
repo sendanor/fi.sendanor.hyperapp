@@ -4,7 +4,7 @@ import {HyperDTO} from "../../hyperstack/dto/HyperDTO";
 
 describe('HyperRendererImpl', () => {
     test('renderApp returns a defined and valid React element', () => {
-        const renderer = HyperRendererImpl.create();
+        const renderer = HyperRendererImpl.create('http://localhost:3000');
 
         const mockComponents: never[] = [
 

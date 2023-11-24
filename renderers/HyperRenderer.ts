@@ -39,10 +39,16 @@ export interface HyperRouteRenderer {
     (
         item        : HyperRouteDTO,
         definitions : HyperDTO,
+        publicUrl   : string,
     ) : HyperRoute;
 }
 
 export interface HyperRenderer {
+
+    /**
+     * Returns the default public URL
+     */
+    getPublicUrl () : string;
 
     /**
      * Attach custom app renderer.

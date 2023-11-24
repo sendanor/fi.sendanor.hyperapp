@@ -33,22 +33,32 @@ export class HyperRendererImpl implements HyperRenderer {
     private _viewRenderer     : HyperViewRenderer;
     private _appRenderer      : HyperAppRenderer;
     private _routeRenderer    : HyperRouteRenderer;
+    private _publicUrl        : string;
 
     private static _getNextFragmentId () : number {
         HyperRendererImpl._fragmentIdIndex += 1;
         return HyperRendererImpl._fragmentIdIndex;
     }
 
-    private constructor () {
+    private constructor (
+        publicUrl : string,
+    ) {
+        this._publicUrl = publicUrl;
         this._myFragmentBaseId = HyperRendererImpl._getNextFragmentId();
-        this._appRenderer     = HyperRendererImpl.defaultRenderApp.bind(undefined, this);
-        this._routeRenderer   = HyperRendererImpl.defaultRenderRoute.bind(undefined, this);
-        this._viewRenderer    = HyperRendererImpl.defaultRenderView.bind(undefined, this);
+        this._appRenderer = HyperRendererImpl.defaultRenderApp.bind(undefined, this);
+        this._routeRenderer = HyperRendererImpl.defaultRenderRoute.bind(undefined, this);
+        this._viewRenderer = HyperRendererImpl.defaultRenderView.bind(undefined, this);
         this._contentRenderer = HyperRendererImpl.defaultRenderContent.bind(undefined, this);
     }
 
-    public static create () {
-        return new HyperRendererImpl();
+    public getPublicUrl () : string {
+        return this._publicUrl;
+    }
+
+    public static create (
+        publicUrl : string,
+    ) : HyperRendererImpl {
+        return new HyperRendererImpl(publicUrl);
     }
 
     /**
@@ -72,18 +82,26 @@ export class HyperRendererImpl implements HyperRenderer {
         item        : HyperRouteDTO,
         definitions : HyperDTO,
     ) : HyperRoute {
-        return this._routeRenderer(item, definitions);
+        const publicUrl = definitions?.publicUrl ?? this._publicUrl;
+        return this._routeRenderer(
+            item,
+            definitions,
+            publicUrl,
+        );
     }
 
     /**
      * @inheritDoc
      */
     public renderRouteList (
-        definitions: HyperDTO,
+        definitions : HyperDTO,
     ) : readonly HyperRoute[] {
         return map(
             definitions.routes,
-            (item: HyperRouteDTO): HyperRoute => this.renderRoute( item, definitions )
+            (item: HyperRouteDTO): HyperRoute => this.renderRoute(
+                item,
+                definitions,
+            )
         );
     }
 
@@ -104,7 +122,11 @@ export class HyperRendererImpl implements HyperRenderer {
         routePath   : string,
         definitions : HyperDTO,
     ) : ReactNode {
-        const view : HyperViewDTO = findAndPopulateHyperViewDTO(viewName, definitions.views);
+        const view : HyperViewDTO = findAndPopulateHyperViewDTO(
+            viewName,
+            definitions.views,
+            definitions.publicUrl ?? this._publicUrl,
+        );
         return this._viewRenderer(view, routePath, definitions);
     }
 
@@ -121,7 +143,6 @@ export class HyperRendererImpl implements HyperRenderer {
     /**
      * Default render implementation for apps
      *
-     * @param app
      * @param definitions
      * @param renderer
      */
@@ -129,7 +150,7 @@ export class HyperRendererImpl implements HyperRenderer {
         renderer    : HyperRenderer,
         definitions : HyperDTO,
     ) : ReactNode {
-        const publicUrl : string | undefined = definitions.publicUrl ?? '';
+        const publicUrl : string | undefined = definitions.publicUrl ?? renderer.getPublicUrl();
         const language : string | undefined = definitions.language ?? 'en';
         return (
             <HyperApp
@@ -144,7 +165,6 @@ export class HyperRendererImpl implements HyperRenderer {
      *
      * @param renderer
      * @param item
-     * @param app
      * @param definitions
      */
     public static defaultRenderRoute (
@@ -183,7 +203,6 @@ export class HyperRendererImpl implements HyperRenderer {
      *
      * @param renderer
      * @param view
-     * @param app
      * @param routePath
      * @param definitions
      */
@@ -209,6 +228,12 @@ export class HyperRendererImpl implements HyperRenderer {
         );
     }
 
+    /**
+     *
+     * @param renderer
+     * @param content
+     * @param definitions
+     */
     public static defaultRenderComponent (
         renderer    : HyperRenderer,
         content     : HyperComponentDTO,
@@ -224,6 +249,12 @@ export class HyperRendererImpl implements HyperRenderer {
         return <>{JSON.stringify(content)}</>;
     }
 
+    /**
+     *
+     * @param renderer
+     * @param content
+     * @param definitions
+     */
     public static defaultRenderContent (
         renderer    : HyperRenderer,
         content     : undefined | HyperComponentContent,
