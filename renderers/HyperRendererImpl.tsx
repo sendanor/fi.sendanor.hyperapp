@@ -3,6 +3,7 @@
 import { ReactNode, Fragment } from "react";
 import { Link } from "react-router-dom";
 import { map } from "../../../hg/core/functions/map";
+import { ReadonlyJsonObject } from "../../../hg/core/Json";
 import { LogService } from "../../../hg/core/LogService";
 import { isArray } from "../../../hg/core/types/Array";
 import { isString } from "../../../hg/core/types/String";
@@ -20,7 +21,7 @@ import { HyperActionButton } from "../components/actionButton/HyperActionButton"
 import { HyperApp } from "../components/apps/HyperApp";
 import { HyperArticle } from "../components/article/HyperArticle";
 import { createHyperRoute, HyperRoute } from "../components/types/HyperRoute";
-import { HyperView } from "../components/views/HyperView";
+import { LazyHyperView } from "../components/views/LazyHyperView";
 import { HyperAppRenderer, HyperContentRenderer, HyperRenderer, HyperRouteRenderer, HyperViewRenderer } from "./HyperRenderer";
 
 const LOG = LogService.createLogger( 'HyperRendererImpl' );
@@ -213,19 +214,21 @@ export class HyperRendererImpl implements HyperRenderer {
         routePath   : string,
         definitions : HyperDTO,
     ) : ReactNode {
-        const viewName = view.name;
-        LOG.debug(`Rendering view: `, viewName);
+        const viewName  : string = view.name;
         const language  : string = view.language  ?? definitions.language  ?? 'en';
         const publicUrl : string = view.publicUrl ?? definitions.publicUrl ?? '';
         const style     : HyperStyleDTO = view.style ?? {};
+        const meta      : ReadonlyJsonObject = view.meta ?? {};
+        LOG.debug(`Initializing view: `, viewName);
         return (
-            <HyperView
+            <LazyHyperView
                 name={viewName}
                 language={language}
                 publicUrl={publicUrl}
                 routePath={routePath}
                 style={style}
-            >{renderer.renderContent( view.content, definitions )}</HyperView>
+                meta={meta}
+            >{renderer.renderContent( view.content, definitions )}</LazyHyperView>
         );
     }
 

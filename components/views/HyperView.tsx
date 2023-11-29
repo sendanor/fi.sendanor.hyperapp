@@ -1,7 +1,15 @@
 // Copyright (c) 2023. Sendanor <info@sendanor.fi>. All rights reserved.
 
-import { PropsWithChildren, ReactNode, useEffect } from "react";
+import {
+    PropsWithChildren,
+    ReactNode,
+    useCallback,
+    useEffect,
+} from "react";
+import { ReadonlyJsonObject } from "../../../../hg/core/Json";
 import { LogService } from "../../../../hg/core/LogService";
+import { isNumber } from "../../../../hg/core/types/Number";
+import { isString } from "../../../../hg/core/types/String";
 import { ScrollToHere } from "../../../../hg/frontend/components/common/scrollToHere/ScrollToHere";
 import { HYPER_VIEW_CLASS_NAME } from "../../../hyperstack/constants/classNames";
 import { getCssStyles, HyperStyleDTO } from "../../../hyperstack/dto/HyperStyleDTO";
@@ -33,6 +41,7 @@ export interface HyperViewProps
     readonly seoTitle       ?: string;
     readonly seoDescription ?: string;
     readonly seoSiteName    ?: string;
+    readonly meta           ?: ReadonlyJsonObject;
 }
 
 export function HyperView (props: HyperViewProps) {
@@ -46,16 +55,74 @@ export function HyperView (props: HyperViewProps) {
     const seoDescription : string = props?.seoDescription ?? '';
     const seoSiteName : string = props?.seoSiteName ?? '';
     const children = props?.children ?? null;
+    const meta : ReadonlyJsonObject = props?.meta ?? {};
+    const metaRefresh : number | undefined = isNumber(meta?.refresh) ? meta.refresh : undefined;
+    const metaTimestamp : string | undefined = isString(meta?.timestamp) ? meta.timestamp : undefined;
+
     const location = useLocation();
+
+    const updateViewCallback = useCallback(
+        () => {
+            LOG.debug(`Updating view: `, name);
+            HyperServiceImpl.updateView(name);
+        },
+        [
+            name
+        ]
+    );
+
+    // Handle view activation and deactivation
     useEffect( () => {
-        LOG.debug(`Active view: `, name);
+        LOG.debug(`Activate view: `, name);
         HyperServiceImpl.activateView(name);
-        return () => {
+        return () : void => {
+            LOG.debug(`Deactivate view: `, name);
             HyperServiceImpl.deactivateView(name);
         };
     }, [
-        name
+        name,
     ] );
+
+    // Handle view refreshing
+    useEffect(() => {
+
+        let timeout : any | undefined = undefined;
+
+        if (metaRefresh !== undefined) {
+
+            // These logging lines with metaTimestamp are important and implement a desired functionality, e.g. if
+            // timestamp changes the timer should also reset. This way the timer is loaded again after a refresh, and it
+            // implements interval updating. Probably not the best and most easily readable way to do it, but it works.
+            if (metaTimestamp) {
+                LOG.debug(`Enabling refresh for "${name}" from ${metaTimestamp} after ${metaRefresh} ms`);
+            } else {
+                LOG.debug(`Enabling refresh for "${name}" after ${metaRefresh} ms`);
+            }
+            timeout = setTimeout(
+                () => {
+                    LOG.debug(`Timeout reached: Refreshing view "${name}"`);
+                    timeout = undefined;
+                    updateViewCallback();
+                },
+                metaRefresh
+            );
+        }
+
+        return () : void => {
+            if (timeout !== undefined) {
+                LOG.debug(`Disabling refresh for "${name}"`);
+                clearTimeout(timeout);
+                timeout = undefined;
+            }
+        };
+
+    }, [
+        name,
+        updateViewCallback,
+        metaRefresh,
+        metaTimestamp,
+    ]);
+
     return (
         <div
             className={

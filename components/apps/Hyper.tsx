@@ -1,6 +1,7 @@
 // Copyright (c) 2023. Sendanor <info@sendanor.fi>. All rights reserved.
 
 import { useCallback } from "react";
+import { LogService } from "../../../../hg/core/LogService";
 import { useServiceEvent } from "../../../../hg/frontend/hooks/useServiceEvent";
 import { HyperDTO } from "../../../hyperstack/dto/HyperDTO";
 import { createLoadingAppDefinition } from "../../../hyperstack/samples/loading/LoadingAppDefinition";
@@ -29,6 +30,8 @@ const LOADING_APP = createLoadingAppDefinition(
     'en',
 );
 
+const LOG = LogService.createLogger( 'Hyper' );
+
 export function Hyper (
     props : HyperProps
 ) {
@@ -38,6 +41,7 @@ export function Hyper (
 
     const updateAppCallback = useCallback(
         (eventName: string, name : string) => {
+            LOG.debug(`Updating app: ${name}`);
             // FIXME: Implement better logic
             refreshCallback();
         }, [
@@ -47,6 +51,7 @@ export function Hyper (
 
     const updateViewCallback = useCallback(
         (eventName: string, name: string) => {
+            LOG.debug(`Updating view: ${name}`);
             // FIXME: Implement better logic
             refreshCallback();
         }, [

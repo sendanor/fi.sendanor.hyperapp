@@ -3,6 +3,7 @@
 import { ReactNode, useState } from "react";
 import { startsWith } from "../../../../hg/core/functions/startsWith";
 import { HttpService } from "../../../../hg/core/HttpService";
+import { ReadonlyJsonObject } from "../../../../hg/core/Json";
 import { LogService } from "../../../../hg/core/LogService";
 import { HyperDTO } from "../../../hyperstack/dto/HyperDTO";
 import { HyperStyleDTO } from "../../../hyperstack/dto/HyperStyleDTO";
@@ -54,8 +55,9 @@ export function RemoteHyperView (props: RemoteHyperViewProps) {
         });
     }
 
-    const language  : string = view?.language  ?? definitions.language  ?? 'en';
+    const language  : string             = view?.language  ?? definitions.language  ?? 'en';
     const style     : HyperStyleDTO      = view?.style     ?? {};
+    const meta      : ReadonlyJsonObject = view?.meta      ?? {};
     return (
         <HyperView
             className={className}
@@ -64,6 +66,7 @@ export function RemoteHyperView (props: RemoteHyperViewProps) {
             publicUrl={publicUrl}
             routePath={routePath}
             style={style}
+            meta={meta}
         >{children}</HyperView>
     );
 }

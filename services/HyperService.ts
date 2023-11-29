@@ -4,10 +4,27 @@ import { ObserverCallback, ObserverDestructor } from "../../../hg/core/Observer"
 import { Disposable } from "../../../hg/core/types/Disposable";
 
 export enum HyperServiceEvent {
+
+    /**
+     *
+     */
     UPDATE_APP = "HyperService:updateApp",
+
+    /**
+     *
+     */
     UPDATE_VIEW = "HyperService:updateView",
+
+    /**
+     *
+     */
     ACTIVATE_VIEW = "HyperService:activateView",
+
+    /**
+     *
+     */
     DEACTIVATE_VIEW = "HyperService:deactivateView",
+
 }
 
 export type HyperServiceDestructor = ObserverDestructor;
