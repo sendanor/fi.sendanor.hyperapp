@@ -1,11 +1,15 @@
 // Copyright (c) 2023. Sendanor <info@sendanor.fi>. All rights reserved.
 
-import { useCallback } from "react";
+import {
+    useCallback,
+    useEffect,
+    useState,
+} from "react";
 import { LogService } from "../../../../hg/core/LogService";
 import { useServiceEvent } from "../../../../hg/frontend/hooks/useServiceEvent";
-import { HyperDTO } from "../../../hyperstack/dto/HyperDTO";
-import { createLoadingAppDefinition } from "../../../hyperstack/samples/loading/LoadingAppDefinition";
-import { useHyperDefinitions } from "../../hooks/useHyperDefinitions";
+import {
+    HyperDTO,
+} from "../../../hyperstack/dto/HyperDTO";
 import { HyperRenderer } from "../../renderers/HyperRenderer";
 import { HyperServiceEvent } from "../../services/HyperService";
 import { HyperServiceImpl } from "../../services/HyperServiceImpl";
@@ -13,65 +17,54 @@ import { HyperServiceImpl } from "../../services/HyperServiceImpl";
 export interface HyperProps {
 
     /**
-     * The hyper stack application definition or URL to the definition
+     * The URL where to fetch hyper stack application definitions
      */
-    readonly definitions : HyperDTO | string;
+    readonly url : string;
 
     /**
-     * The node renderer
+     * The Hyper Application renderer
      */
     readonly renderer : HyperRenderer;
 
 }
-
-const LOADING_APP = createLoadingAppDefinition(
-    'LoadingApp',
-    '',
-    'en',
-);
 
 const LOG = LogService.createLogger( 'Hyper' );
 
 export function Hyper (
     props : HyperProps
 ) {
+
     const renderer : HyperRenderer = props.renderer;
-    const definitions : HyperDTO | string = props.definitions;
-    const [dto, refreshCallback] = useHyperDefinitions(definitions);
+    const url : string = props.url;
 
-    const updateAppCallback = useCallback(
-        (eventName: string, name : string) => {
-            LOG.debug(`Updating app: ${name}`);
-            // FIXME: Implement better logic
-            refreshCallback();
-        }, [
-            refreshCallback
-        ]
+    const [dto, setDto] = useState<HyperDTO>(
+        () => HyperServiceImpl.getAppDefinitions()
     );
 
-    const updateViewCallback = useCallback(
-        (eventName: string, name: string) => {
-            LOG.debug(`Updating view: ${name}`);
-            // FIXME: Implement better logic
-            refreshCallback();
+    const updateDtoCallback = useCallback(
+        () : void => {
+            LOG.debug(`Updating definitions from event`);
+            setDto( () => HyperServiceImpl.getAppDefinitions() );
         }, [
-            refreshCallback
-        ]
+        ],
     );
 
-    // When language in our service changes
     useServiceEvent(
         HyperServiceImpl,
-        HyperServiceEvent.UPDATE_APP,
-        updateAppCallback,
+        HyperServiceEvent.APP_DEFINITIONS_UPDATED,
+        updateDtoCallback,
     );
 
-    // When language in our service changes
-    useServiceEvent(
-        HyperServiceImpl,
-        HyperServiceEvent.UPDATE_VIEW,
-        updateViewCallback,
-    );
+    useEffect(() => {
+        LOG.debug(`Initializing URL: `, url);
+        HyperServiceImpl.setUrl(url);
+        return () : void => {
+            LOG.debug(`Uninitialized URL: `, url);
+            HyperServiceImpl.unsetUrl();
+        };
+    }, [
+        url,
+    ]);
 
-    return renderer.renderApp( dto ?? LOADING_APP );
+    return renderer.renderApp( dto );
 }

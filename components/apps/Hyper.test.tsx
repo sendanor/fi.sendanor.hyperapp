@@ -18,7 +18,7 @@ describe('Hyper Component', () => {
 
             const { container } = render(
                 <MemoryRouter>
-                    <Hyper definitions={''} renderer={hyperRendererImpl} />
+                    <Hyper url={'https://localhost:3000/api/v1'} renderer={hyperRendererImpl} />
                 </MemoryRouter>
             );
 

@@ -9,8 +9,12 @@ import { isString } from "../../../../hg/core/types/String";
 import { Button } from "../../../../hg/frontend/components/button/Button";
 import { RouteService } from "../../../../hg/frontend/services/RouteService";
 import { HYPER_ARTICLE_CLASS_NAME } from "../../../hyperstack/constants/classNames";
-import { isHyperViewDTO } from "../../../hyperstack/dto/HyperViewDTO";
+import {
+    HyperViewDTO,
+    isHyperViewDTO,
+} from "../../../hyperstack/dto/HyperViewDTO";
 import { HyperAction, isHyperAction } from "../../../hyperstack/types/HyperAction";
+import { HyperServiceImpl } from "../../services/HyperServiceImpl";
 import { PropsWithClassName } from "../types/PropsWithClassName";
 import "./HyperActionButton.scss";
 
@@ -47,11 +51,63 @@ async function doRequest (
 }
 
 async function handleRedirect (
-    redirect: HyperAction | string | undefined,
+    redirect: HyperViewDTO | HyperAction | string | undefined,
     response: ReadonlyJsonAny | undefined,
 ) : Promise<void> {
 
+    if ( redirect === undefined && isHyperViewDTO(response) && response.name ) {
+
+        const location = response?.meta?.location;
+        if (isString(location)) {
+            LOG.debug(`Redirecting to `, location);
+            RouteService.setRoute(location);
+            return;
+        }
+
+        HyperServiceImpl.saveViewDTO(response);
+        const path : string | undefined = HyperServiceImpl.getRoutePathByViewName(response.name);
+        if (path) {
+            LOG.debug(`Redirecting to `, path);
+            RouteService.setRoute( path );
+        } else {
+            LOG.warn(`Warning! Could not find route for name: ${response.name}`);
+        }
+        return;
+    }
+
+    if ( isHyperViewDTO(redirect) && redirect.name ) {
+        const location = redirect?.meta?.location;
+        if (isString(location)) {
+            LOG.debug(`Redirecting to `, location);
+            RouteService.setRoute(location);
+            return;
+        }
+
+        HyperServiceImpl.saveViewDTO(redirect);
+        const path : string | undefined = HyperServiceImpl.getRoutePathByViewName(redirect.name);
+        if (path) {
+            LOG.debug(`Redirecting to `, path);
+            RouteService.setRoute( path );
+        } else {
+            LOG.warn(`Warning! Could not find route for name: ${redirect.name}`);
+        }
+        return;
+    }
+
     if (isString(redirect)) {
+        const path : string | undefined = HyperServiceImpl.getRoutePathByViewName(redirect);
+        if (path) {
+            LOG.debug(`Redirecting to `, path);
+            RouteService.setRoute( path );
+            return
+        }
+        const routePath : string | undefined = HyperServiceImpl.getRoutePathByRouteName(redirect);
+        if (routePath) {
+            LOG.debug(`Redirecting to `, routePath);
+            RouteService.setRoute( routePath );
+            return
+        }
+        LOG.debug(`Redirecting to `, redirect);
         RouteService.setRoute( redirect );
         return;
     }
@@ -69,12 +125,23 @@ async function handleRedirect (
             );
             LOG.debug(`Response from ${method} ${target}: `, nextResponse);
 
-            if (redirect.successRedirect === undefined && isHyperViewDTO(nextResponse) && nextResponse.extend ) {
-                RouteService.setRoute( nextResponse.extend );
+            const location = (nextResponse as any)?.meta?.location;
+            if (isString(location)) {
+                LOG.debug(`Redirecting to: `, location);
+                RouteService.setRoute(location);
                 return;
             }
 
-            return await handleRedirect(redirect.successRedirect, nextResponse);
+            if (redirect.successRedirect) {
+                return await handleRedirect(redirect.successRedirect, nextResponse);
+            }
+
+            if (isHyperViewDTO(nextResponse)) {
+                return await handleRedirect(nextResponse, undefined);
+            }
+
+            LOG.warn(`Warning! Could not handle response: `, nextResponse);
+            return;
         } catch (err : any) {
             LOG.error(`handleRedirect: Exception: `, err);
             return await handleRedirect(redirect.errorRedirect, err);
@@ -114,6 +181,14 @@ export function HyperActionButton (props: HyperActionButtonProps) {
                 target,
                 body
             ).then( async (response) : Promise<void> => {
+
+                const location = (response as any)?.meta?.location;
+                if (isString(location)) {
+                    LOG.debug(`Redirecting to: `, location);
+                    RouteService.setRoute(location);
+                    return;
+                }
+
                 await handleRedirect(successRedirect, response);
             }).catch( async (err: any) => {
                 LOG.error(`Exception: `, err);

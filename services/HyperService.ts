@@ -6,22 +6,32 @@ import { Disposable } from "../../../hg/core/types/Disposable";
 export enum HyperServiceEvent {
 
     /**
-     *
+     * Triggered when app's definitions URL have been changed
+     */
+    APP_URL_UPDATED = "HyperService:appUrlUpdated",
+
+    /**
+     * Triggered when app's definitions have been changed
+     */
+    APP_DEFINITIONS_UPDATED = "HyperService:appDefinitionsUpdated",
+
+    /**
+     * Can be triggered to update the app's state
      */
     UPDATE_APP = "HyperService:updateApp",
 
     /**
-     *
+     * Can be triggered to update a view's state
      */
     UPDATE_VIEW = "HyperService:updateView",
 
     /**
-     *
+     * Triggered when the view is activated
      */
     ACTIVATE_VIEW = "HyperService:activateView",
 
     /**
-     *
+     * Triggered when the view is deactivated
      */
     DEACTIVATE_VIEW = "HyperService:deactivateView",
 
@@ -82,5 +92,9 @@ export interface HyperService extends Disposable {
      * @param name
      */
     isViewActive (name : string) : boolean;
+
+    setUrl (url: string) : void;
+    getUrl () : string | undefined;
+    unsetUrl () : void;
 
 }

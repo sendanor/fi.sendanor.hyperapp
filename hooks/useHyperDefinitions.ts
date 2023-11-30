@@ -14,6 +14,7 @@ const LOG = LogService.createLogger( 'useHyperDefinitions' );
 /**
  *
  * @param definitions
+ * @deprecated Use HyperServiceImpl directly.
  */
 export function useHyperDefinitions (
     definitions : HyperDTO | string
