@@ -3,7 +3,7 @@
 import { ObserverCallback, ObserverDestructor } from "../../../hg/core/Observer";
 import { Disposable } from "../../../hg/core/types/Disposable";
 
-export enum HyperServiceEvent {
+export enum AppServiceEvent {
 
     /**
      * Triggered when app's definitions URL have been changed
@@ -37,7 +37,7 @@ export enum HyperServiceEvent {
 
 }
 
-export type HyperServiceDestructor = ObserverDestructor;
+export type AppServiceDestructor = ObserverDestructor;
 
 /**
  * Service which keeps track of state of the Hyper frontend components on the
@@ -45,12 +45,12 @@ export type HyperServiceDestructor = ObserverDestructor;
  *
  * This interface describes the static public interface for the `HyperServiceImpl`.
  */
-export interface HyperService extends Disposable {
+export interface AppServiceType extends Disposable {
 
     /**
      *
      */
-    Event : HyperServiceEvent;
+    Event : AppServiceEvent;
 
     /**
      *
@@ -58,9 +58,9 @@ export interface HyperService extends Disposable {
      * @param callback
      */
     on (
-        name: HyperServiceEvent,
-        callback: ObserverCallback<HyperServiceEvent>
-    ): HyperServiceDestructor;
+        name: AppServiceEvent,
+        callback: ObserverCallback<AppServiceEvent>
+    ): AppServiceDestructor;
 
     /**
      *

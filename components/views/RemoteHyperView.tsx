@@ -5,9 +5,9 @@ import { startsWith } from "../../../../hg/core/functions/startsWith";
 import { HttpService } from "../../../../hg/core/HttpService";
 import { ReadonlyJsonObject } from "../../../../hg/core/Json";
 import { LogService } from "../../../../hg/core/LogService";
-import { HyperDTO } from "../../../hyperstack/dto/HyperDTO";
-import { HyperStyleDTO } from "../../../hyperstack/dto/HyperStyleDTO";
-import { explainHyperViewDTO, HyperViewDTO, isHyperViewDTO } from "../../../hyperstack/dto/HyperViewDTO";
+import { AppDTO } from "../../../hyperstack/dto/AppDTO";
+import { StyleDTO } from "../../../hyperstack/dto/StyleDTO";
+import { explainViewDTO, ViewDTO, isViewDTO } from "../../../hyperstack/dto/ViewDTO";
 import { PropsWithClassName } from "../types/PropsWithClassName";
 import { HyperView } from "./HyperView";
 import "./RemoteHyperView.scss";
@@ -22,20 +22,20 @@ export interface RemoteHyperViewProps
     readonly className      ?: string;
     readonly publicUrl      ?: string;
     readonly routePath       : string,
-    readonly view            : HyperViewDTO;
-    readonly definitions     : HyperDTO,
+    readonly view            : ViewDTO;
+    readonly definitions     : AppDTO,
 
 }
 
 export function RemoteHyperView (props: RemoteHyperViewProps) {
     const className = props?.className;
-    const origView : HyperViewDTO = props.view;
+    const origView : ViewDTO = props.view;
     const routePath : string = props.routePath;
-    const definitions : HyperDTO = props.definitions;
+    const definitions : AppDTO = props.definitions;
     const children = props?.children ?? null;
     const publicUrl : string = props?.publicUrl ?? origView?.publicUrl ?? definitions.publicUrl ?? '';
 
-    const [view, setView] = useState<HyperViewDTO>(origView);
+    const [view, setView] = useState<ViewDTO>(origView);
 
     let viewName : string = view.name;
     if (startsWith(viewName, '/')) {
@@ -44,11 +44,11 @@ export function RemoteHyperView (props: RemoteHyperViewProps) {
 
     if (startsWith(viewName, 'http://') || startsWith(viewName, 'https://')) {
         HttpService.getJson(viewName).then((result) => {
-            if (isHyperViewDTO(result)) {
+            if (isViewDTO(result)) {
                 setView(result);
             } else {
                 LOG.debug(`RemoteHyperView: result = `, result);
-                LOG.error(`RemoteHyperView: Invalid result from "${viewName}": ${explainHyperViewDTO(result)}`);
+                LOG.error(`RemoteHyperView: Invalid result from "${viewName}": ${explainViewDTO(result)}`);
             }
         }).catch((err) => {
             LOG.error(`RemoteHyperView: Failed to fetch resource "${viewName}": `, err);
@@ -56,7 +56,7 @@ export function RemoteHyperView (props: RemoteHyperViewProps) {
     }
 
     const language  : string             = view?.language  ?? definitions.language  ?? 'en';
-    const style     : HyperStyleDTO      = view?.style     ?? {};
+    const style     : StyleDTO      = view?.style     ?? {};
     const meta      : ReadonlyJsonObject = view?.meta      ?? {};
     return (
         <HyperView

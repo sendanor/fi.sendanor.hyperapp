@@ -12,8 +12,9 @@ import { isNumber } from "../../../../hg/core/types/Number";
 import { isString } from "../../../../hg/core/types/String";
 import { ScrollToHere } from "../../../../hg/frontend/components/common/scrollToHere/ScrollToHere";
 import { HYPER_VIEW_CLASS_NAME } from "../../../hyperstack/constants/classNames";
-import { getCssStyles, HyperStyleDTO } from "../../../hyperstack/dto/HyperStyleDTO";
-import { HyperServiceImpl } from "../../services/HyperServiceImpl";
+import { StyleDTO } from "../../../hyperstack/dto/StyleDTO";
+import { StyleEntity } from "../../../hyperstack/entities/StyleEntity";
+import { AppServiceImpl } from "../../services/AppServiceImpl";
 import { SEO } from "../seo/SEO";
 import { useLocation } from "react-router-dom";
 import { PropsWithClassName } from "../types/PropsWithClassName";
@@ -36,7 +37,7 @@ export interface HyperViewProps
     readonly publicUrl       : string;
     readonly routePath       : string;
     readonly children       ?: ReactNode;
-    readonly style          ?: HyperStyleDTO;
+    readonly style          ?: StyleDTO;
     readonly className      ?: string;
     readonly seoTitle       ?: string;
     readonly seoDescription ?: string;
@@ -50,7 +51,7 @@ export function HyperView (props: HyperViewProps) {
     const publicUrl : string = props.publicUrl;
     const language : string = props.language;
     const routePath : string = props.routePath;
-    const style : HyperStyleDTO = props.style ?? {};
+    const style : StyleDTO = props.style ?? {};
     const seoTitle : string = props?.seoTitle ?? '';
     const seoDescription : string = props?.seoDescription ?? '';
     const seoSiteName : string = props?.seoSiteName ?? '';
@@ -64,7 +65,7 @@ export function HyperView (props: HyperViewProps) {
     const updateViewCallback = useCallback(
         () => {
             LOG.debug(`Updating view: `, name);
-            HyperServiceImpl.updateView(name);
+            AppServiceImpl.updateView(name);
         },
         [
             name
@@ -74,10 +75,10 @@ export function HyperView (props: HyperViewProps) {
     // Handle view activation and deactivation
     useEffect( () => {
         LOG.debug(`Activate view: `, name);
-        HyperServiceImpl.activateView(name);
+        AppServiceImpl.activateView(name);
         return () : void => {
             LOG.debug(`Deactivate view: `, name);
-            HyperServiceImpl.deactivateView(name);
+            AppServiceImpl.deactivateView(name);
         };
     }, [
         name,
@@ -129,7 +130,7 @@ export function HyperView (props: HyperViewProps) {
                 HYPER_VIEW_CLASS_NAME
                 + (className? ` ${className}` : '')
             }
-            style={getCssStyles(style)}>
+            style={StyleEntity.createFromDTO(style).getCssStyles()}>
             {location.pathname === routePath ? (
                 <>
                     <SEO

@@ -8,15 +8,18 @@ import { LogService } from "../../../hg/core/LogService";
 import { isArray } from "../../../hg/core/types/Array";
 import { isString } from "../../../hg/core/types/String";
 import { Button } from "../../../hg/frontend/components/button/Button";
-import { HyperComponentContent, HyperComponentDTO, isHyperComponentDTO } from "../../hyperstack/dto/HyperComponentDTO";
-import { HyperDTO } from "../../hyperstack/dto/HyperDTO";
-import { HyperRouteDTO } from "../../hyperstack/dto/HyperRouteDTO";
-import { HyperStyleDTO } from "../../hyperstack/dto/HyperStyleDTO";
-import { HyperViewDTO } from "../../hyperstack/dto/HyperViewDTO";
+import {
+    ActionDTO,
+    isActionDTOOrStringOrUndefined,
+} from "../../hyperstack/dto/ActionDTO";
+import { ComponentContent, ComponentDTO, isComponentDTO } from "../../hyperstack/dto/ComponentDTO";
+import { AppDTO } from "../../hyperstack/dto/AppDTO";
+import { RouteDTO } from "../../hyperstack/dto/RouteDTO";
+import { StyleDTO } from "../../hyperstack/dto/StyleDTO";
+import { ViewDTO } from "../../hyperstack/dto/ViewDTO";
 import { HyperComponent } from "../../hyperstack/dto/types/HyperComponent";
-import { HyperAction, isHyperActionOrStringOrUndefined } from "../../hyperstack/types/HyperAction";
-import { findAndPopulateHyperViewDTO } from "../../hyperstack/utils/views/findAndPopulateHyperViewDTO";
-import { populateHyperComponentDTO } from "../../hyperstack/utils/components/populateHyperComponentDTO";
+import { findAndPopulateViewDTO } from "../../hyperstack/utils/views/findAndPopulateViewDTO";
+import { populateComponentDTO } from "../../hyperstack/utils/components/populateComponentDTO";
 import { HyperActionButton } from "../components/actionButton/HyperActionButton";
 import { HyperApp } from "../components/apps/HyperApp";
 import { HyperArticle } from "../components/article/HyperArticle";
@@ -81,8 +84,8 @@ export class HyperRendererImpl implements HyperRenderer {
      * @inheritDoc
      */
     public renderRoute (
-        item        : HyperRouteDTO,
-        definitions : HyperDTO,
+        item        : RouteDTO,
+        definitions : AppDTO,
     ) : HyperRoute {
         const publicUrl = definitions?.publicUrl ?? this._publicUrl;
         return this._routeRenderer(
@@ -96,11 +99,11 @@ export class HyperRendererImpl implements HyperRenderer {
      * @inheritDoc
      */
     public renderRouteList (
-        definitions : HyperDTO,
+        definitions : AppDTO,
     ) : readonly HyperRoute[] {
         return map(
             definitions.routes,
-            (item: HyperRouteDTO): HyperRoute => this.renderRoute(
+            (item: RouteDTO): HyperRoute => this.renderRoute(
                 item,
                 definitions,
             )
@@ -111,7 +114,7 @@ export class HyperRendererImpl implements HyperRenderer {
      * @inheritDoc
      */
     public renderApp (
-        definitions : HyperDTO,
+        definitions : AppDTO,
     ) : ReactNode {
         return this._appRenderer(definitions);
     }
@@ -122,9 +125,9 @@ export class HyperRendererImpl implements HyperRenderer {
     public renderView (
         viewName    : string,
         routePath   : string,
-        definitions : HyperDTO,
+        definitions : AppDTO,
     ) : ReactNode {
-        const view : HyperViewDTO = findAndPopulateHyperViewDTO(
+        const view : ViewDTO = findAndPopulateViewDTO(
             viewName,
             definitions.views,
             definitions.publicUrl ?? this._publicUrl,
@@ -136,8 +139,8 @@ export class HyperRendererImpl implements HyperRenderer {
      * @inheritDoc
      */
     public renderContent (
-        content     : undefined | HyperComponentContent,
-        definitions : HyperDTO,
+        content     : undefined | ComponentContent,
+        definitions : AppDTO,
     ) : ReactNode {
         return this._contentRenderer(content, definitions);
     }
@@ -150,7 +153,7 @@ export class HyperRendererImpl implements HyperRenderer {
      */
     public static defaultRenderApp (
         renderer    : HyperRenderer,
-        definitions : HyperDTO,
+        definitions : AppDTO,
     ) : ReactNode {
         const publicUrl : string | undefined = definitions.publicUrl ?? renderer.getPublicUrl();
         const language : string | undefined = definitions.language ?? 'en';
@@ -171,8 +174,8 @@ export class HyperRendererImpl implements HyperRenderer {
      */
     public static defaultRenderRoute (
         renderer    : HyperRenderer,
-        item        : HyperRouteDTO,
-        definitions : HyperDTO,
+        item        : RouteDTO,
+        definitions : AppDTO,
     ) : HyperRoute {
 
         if ( item.redirect ) {
@@ -210,14 +213,14 @@ export class HyperRendererImpl implements HyperRenderer {
      */
     public static defaultRenderView (
         renderer    : HyperRenderer,
-        view        : HyperViewDTO,
+        view        : ViewDTO,
         routePath   : string,
-        definitions : HyperDTO,
+        definitions : AppDTO,
     ) : ReactNode {
         const viewName  : string = view.name;
         const language  : string = view.language  ?? definitions.language  ?? 'en';
         const publicUrl : string = view.publicUrl ?? definitions.publicUrl ?? '';
-        const style     : HyperStyleDTO = view.style ?? {};
+        const style     : StyleDTO = view.style ?? {};
         const meta      : ReadonlyJsonObject = view.meta ?? {};
         LOG.debug(`Initializing view: `, viewName);
         return (
@@ -240,11 +243,11 @@ export class HyperRendererImpl implements HyperRenderer {
      */
     public static defaultRenderComponent (
         renderer    : HyperRenderer,
-        content     : HyperComponentDTO,
-        definitions : HyperDTO,
+        content     : ComponentDTO,
+        definitions : AppDTO,
     ) : ReactNode {
 
-        const populatedComponent : HyperComponentDTO = populateHyperComponentDTO(content, definitions.components);
+        const populatedComponent : ComponentDTO = populateComponentDTO(content, definitions.components);
 
         if (populatedComponent.name === HyperComponent.Article) {
             return <HyperArticle>{HyperRendererImpl.defaultRenderContent(renderer, content.content, definitions)}</HyperArticle>
@@ -261,20 +264,20 @@ export class HyperRendererImpl implements HyperRenderer {
      */
     public static defaultRenderContent (
         renderer    : HyperRenderer,
-        content     : undefined | HyperComponentContent,
-        definitions : HyperDTO,
+        content     : undefined | ComponentContent,
+        definitions : AppDTO,
     ) : ReactNode {
 
         const internalRoutePaths : readonly string[] = map(
             definitions?.routes,
-            (route: HyperRouteDTO) : string => route.path
+            (route: RouteDTO) : string => route.path
         );
 
         if (isArray(content)) {
             const fragmentId : number = HyperRendererImpl._getNextFragmentId();
             return <>{map(
                 content,
-                (item: string | HyperComponentDTO, index: number) : ReactNode => {
+                ( item: string | ComponentDTO, index: number) : ReactNode => {
                     return (
                         <Fragment key={`content-${fragmentId}-index-${index}`}>{
                             HyperRendererImpl.defaultRenderContent(renderer, item, definitions)
@@ -284,9 +287,9 @@ export class HyperRendererImpl implements HyperRenderer {
             )}</>;
         }
 
-        if (isHyperComponentDTO(content)) {
+        if (isComponentDTO(content)) {
 
-            const populatedComponent : HyperComponentDTO = populateHyperComponentDTO(content, definitions.components);
+            const populatedComponent : ComponentDTO = populateComponentDTO(content, definitions.components);
 
             if (populatedComponent.name === HyperComponent.ActionButton) {
 
@@ -299,11 +302,11 @@ export class HyperRendererImpl implements HyperRenderer {
 
                 // FIXME: This should default to the current route
                 const successRedirectData = content?.meta?.successRedirect;
-                const successRedirect : string | HyperAction | undefined = isHyperActionOrStringOrUndefined(successRedirectData) ? successRedirectData : undefined;
+                const successRedirect : string | ActionDTO | undefined = isActionDTOOrStringOrUndefined(successRedirectData) ? successRedirectData : undefined;
 
                 // FIXME: This should default to the current route
                 const failureRedirectData = content?.meta?.failureRedirect;
-                const failureRedirect : string | HyperAction | undefined = isHyperActionOrStringOrUndefined(failureRedirectData) ? failureRedirectData : undefined;
+                const failureRedirect : string | ActionDTO | undefined = isActionDTOOrStringOrUndefined(failureRedirectData) ? failureRedirectData : undefined;
 
                 const body = content?.meta?.body;
 

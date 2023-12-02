@@ -8,11 +8,11 @@ import {
 import { LogService } from "../../../../hg/core/LogService";
 import { useServiceEvent } from "../../../../hg/frontend/hooks/useServiceEvent";
 import {
-    HyperDTO,
-} from "../../../hyperstack/dto/HyperDTO";
+    AppDTO,
+} from "../../../hyperstack/dto/AppDTO";
 import { HyperRenderer } from "../../renderers/HyperRenderer";
-import { HyperServiceEvent } from "../../services/HyperService";
-import { HyperServiceImpl } from "../../services/HyperServiceImpl";
+import { AppServiceEvent } from "../../services/AppServiceType";
+import { AppServiceImpl } from "../../services/AppServiceImpl";
 
 export interface HyperProps {
 
@@ -37,30 +37,30 @@ export function Hyper (
     const renderer : HyperRenderer = props.renderer;
     const url : string = props.url;
 
-    const [dto, setDto] = useState<HyperDTO>(
-        () => HyperServiceImpl.getAppDefinitions()
+    const [dto, setDto] = useState<AppDTO>(
+        () => AppServiceImpl.getAppDefinitions()
     );
 
     const updateDtoCallback = useCallback(
         () : void => {
             LOG.debug(`Updating definitions from event`);
-            setDto( () => HyperServiceImpl.getAppDefinitions() );
+            setDto( () => AppServiceImpl.getAppDefinitions() );
         }, [
         ],
     );
 
     useServiceEvent(
-        HyperServiceImpl,
-        HyperServiceEvent.APP_DEFINITIONS_UPDATED,
+        AppServiceImpl,
+        AppServiceEvent.APP_DEFINITIONS_UPDATED,
         updateDtoCallback,
     );
 
     useEffect(() => {
         LOG.debug(`Initializing URL: `, url);
-        HyperServiceImpl.setUrl(url);
+        AppServiceImpl.setUrl(url);
         return () : void => {
             LOG.debug(`Uninitialized URL: `, url);
-            HyperServiceImpl.unsetUrl();
+            AppServiceImpl.unsetUrl();
         };
     }, [
         url,

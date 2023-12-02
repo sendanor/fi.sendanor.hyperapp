@@ -1,44 +1,44 @@
 // Copyright (c) 2023. Sendanor <info@sendanor.fi>. All rights reserved.
 
 import { ReactNode } from "react";
-import { HyperComponentContent, HyperComponentDTO } from "../../hyperstack/dto/HyperComponentDTO";
-import { HyperDTO } from "../../hyperstack/dto/HyperDTO";
-import { HyperRouteDTO } from "../../hyperstack/dto/HyperRouteDTO";
-import { HyperViewDTO } from "../../hyperstack/dto/HyperViewDTO";
+import { ComponentContent, ComponentDTO } from "../../hyperstack/dto/ComponentDTO";
+import { AppDTO } from "../../hyperstack/dto/AppDTO";
+import { RouteDTO } from "../../hyperstack/dto/RouteDTO";
+import { ViewDTO } from "../../hyperstack/dto/ViewDTO";
 import { HyperRoute } from "../components/types/HyperRoute";
 
 export interface HyperAppRenderer {
     (
-        definitions : HyperDTO,
+        definitions : AppDTO,
     ) : ReactNode;
 }
 
 export interface HyperViewRenderer {
     (
-        view        : HyperViewDTO,
+        view        : ViewDTO,
         routePath   : string,
-        definitions : HyperDTO,
+        definitions : AppDTO,
     ) : ReactNode;
 }
 
 export interface HyperContentRenderer {
     (
-        content     : undefined | HyperComponentContent,
-        definitions : HyperDTO,
+        content     : undefined | ComponentContent,
+        definitions : AppDTO,
     ) : ReactNode;
 }
 
 export interface HyperComponentRenderer {
     (
-        component   : HyperComponentDTO,
-        definitions : HyperDTO,
+        component   : ComponentDTO,
+        definitions : AppDTO,
     ) : ReactNode;
 }
 
 export interface HyperRouteRenderer {
     (
-        item        : HyperRouteDTO,
-        definitions : HyperDTO,
+        item        : RouteDTO,
+        definitions : AppDTO,
         publicUrl   : string,
     ) : HyperRoute;
 }
@@ -61,7 +61,7 @@ export interface HyperRenderer {
      * @param definitions
      */
     renderApp (
-        definitions : HyperDTO,
+        definitions : AppDTO,
     ) : ReactNode;
 
     /**
@@ -76,8 +76,8 @@ export interface HyperRenderer {
      * @param definitions
      */
     renderRoute (
-        item        : HyperRouteDTO,
-        definitions : HyperDTO,
+        item        : RouteDTO,
+        definitions : AppDTO,
     ) : HyperRoute;
 
     /**
@@ -85,7 +85,7 @@ export interface HyperRenderer {
      * @param definitions
      */
     renderRouteList (
-        definitions : HyperDTO,
+        definitions : AppDTO,
     ) : readonly HyperRoute[];
 
     /**
@@ -97,7 +97,7 @@ export interface HyperRenderer {
     renderView (
         viewName    : string,
         routePath   : string,
-        definitions : HyperDTO,
+        definitions : AppDTO,
     ) : ReactNode;
 
     /**
@@ -106,8 +106,8 @@ export interface HyperRenderer {
      * @param definitions
      */
     renderContent (
-        content     : undefined | HyperComponentContent,
-        definitions : HyperDTO,
+        content     : undefined | ComponentContent,
+        definitions : AppDTO,
     ) : ReactNode;
 
 }

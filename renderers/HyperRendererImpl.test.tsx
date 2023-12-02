@@ -1,6 +1,6 @@
 import { HyperRendererImpl } from './HyperRendererImpl';
 import React from "react";
-import {HyperDTO} from "../../hyperstack/dto/HyperDTO";
+import {AppDTO} from "../../hyperstack/dto/AppDTO";
 
 describe('HyperRendererImpl', () => {
     test('renderApp returns a defined and valid React element', () => {
@@ -14,7 +14,7 @@ describe('HyperRendererImpl', () => {
 
         ]
 
-        const mockDefinitions: HyperDTO = {
+        const mockDefinitions: AppDTO = {
             name: 'MockHyperDTO',
             components: mockComponents,
             views: mockViews,

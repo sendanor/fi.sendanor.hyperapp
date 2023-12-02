@@ -10,11 +10,14 @@ import { Button } from "../../../../hg/frontend/components/button/Button";
 import { RouteService } from "../../../../hg/frontend/services/RouteService";
 import { HYPER_ARTICLE_CLASS_NAME } from "../../../hyperstack/constants/classNames";
 import {
-    HyperViewDTO,
-    isHyperViewDTO,
-} from "../../../hyperstack/dto/HyperViewDTO";
-import { HyperAction, isHyperAction } from "../../../hyperstack/types/HyperAction";
-import { HyperServiceImpl } from "../../services/HyperServiceImpl";
+    ActionDTO,
+    isActionDTO,
+} from "../../../hyperstack/dto/ActionDTO";
+import {
+    ViewDTO,
+    isViewDTO,
+} from "../../../hyperstack/dto/ViewDTO";
+import { AppServiceImpl } from "../../services/AppServiceImpl";
 import { PropsWithClassName } from "../types/PropsWithClassName";
 import "./HyperActionButton.scss";
 
@@ -30,8 +33,8 @@ export interface HyperActionButtonProps
     readonly method    ?: string;
     readonly target    ?: string;
     readonly body      ?: ReadonlyJsonAny | undefined;
-    readonly successRedirect ?: string | HyperAction | undefined;
-    readonly failureRedirect ?: string | HyperAction | undefined;
+    readonly successRedirect ?: string | ActionDTO | undefined;
+    readonly failureRedirect ?: string | ActionDTO | undefined;
 }
 
 async function doRequest (
@@ -51,11 +54,11 @@ async function doRequest (
 }
 
 async function handleRedirect (
-    redirect: HyperViewDTO | HyperAction | string | undefined,
+    redirect: ViewDTO | ActionDTO | string | undefined,
     response: ReadonlyJsonAny | undefined,
 ) : Promise<void> {
 
-    if ( redirect === undefined && isHyperViewDTO(response) && response.name ) {
+    if ( redirect === undefined && isViewDTO(response) && response.name ) {
 
         const location = response?.meta?.location;
         if (isString(location)) {
@@ -64,8 +67,8 @@ async function handleRedirect (
             return;
         }
 
-        HyperServiceImpl.saveViewDTO(response);
-        const path : string | undefined = HyperServiceImpl.getRoutePathByViewName(response.name);
+        AppServiceImpl.saveViewDTO(response);
+        const path : string | undefined = AppServiceImpl.getRoutePathByViewName(response.name);
         if (path) {
             LOG.debug(`Redirecting to `, path);
             RouteService.setRoute( path );
@@ -75,7 +78,7 @@ async function handleRedirect (
         return;
     }
 
-    if ( isHyperViewDTO(redirect) && redirect.name ) {
+    if ( isViewDTO(redirect) && redirect.name ) {
         const location = redirect?.meta?.location;
         if (isString(location)) {
             LOG.debug(`Redirecting to `, location);
@@ -83,8 +86,8 @@ async function handleRedirect (
             return;
         }
 
-        HyperServiceImpl.saveViewDTO(redirect);
-        const path : string | undefined = HyperServiceImpl.getRoutePathByViewName(redirect.name);
+        AppServiceImpl.saveViewDTO(redirect);
+        const path : string | undefined = AppServiceImpl.getRoutePathByViewName(redirect.name);
         if (path) {
             LOG.debug(`Redirecting to `, path);
             RouteService.setRoute( path );
@@ -95,13 +98,13 @@ async function handleRedirect (
     }
 
     if (isString(redirect)) {
-        const path : string | undefined = HyperServiceImpl.getRoutePathByViewName(redirect);
+        const path : string | undefined = AppServiceImpl.getRoutePathByViewName(redirect);
         if (path) {
             LOG.debug(`Redirecting to `, path);
             RouteService.setRoute( path );
             return
         }
-        const routePath : string | undefined = HyperServiceImpl.getRoutePathByRouteName(redirect);
+        const routePath : string | undefined = AppServiceImpl.getRoutePathByRouteName(redirect);
         if (routePath) {
             LOG.debug(`Redirecting to `, routePath);
             RouteService.setRoute( routePath );
@@ -112,7 +115,7 @@ async function handleRedirect (
         return;
     }
 
-    if (isHyperAction(redirect)) {
+    if (isActionDTO(redirect)) {
         try {
             const method = redirect.method ?? "POST";
             const target = redirect.target;
@@ -136,7 +139,7 @@ async function handleRedirect (
                 return await handleRedirect(redirect.successRedirect, nextResponse);
             }
 
-            if (isHyperViewDTO(nextResponse)) {
+            if (isViewDTO(nextResponse)) {
                 return await handleRedirect(nextResponse, undefined);
             }
 

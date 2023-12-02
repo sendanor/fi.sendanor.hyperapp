@@ -18,45 +18,47 @@ import { parseInteger } from "../../../hg/core/types/Number";
 import { isString } from "../../../hg/core/types/String";
 import { RouteService } from "../../../hg/frontend/services/RouteService";
 import {
-    explainHyperComponentDTO,
-    HyperComponentDTO,
-    isHyperComponentDTO,
-} from "../../hyperstack/dto/HyperComponentDTO";
+    explainComponentDTO,
+    ComponentDTO,
+    isComponentDTO,
+} from "../../hyperstack/dto/ComponentDTO";
 import {
-    createHyperDTO,
-    explainHyperDTO,
-    HyperDTO,
-    isHyperDTO,
-} from "../../hyperstack/dto/HyperDTO";
+    createAppDTO,
+    explainAppDTO,
+    AppDTO,
+    isAppDTO,
+} from "../../hyperstack/dto/AppDTO";
 import {
-    explainHyperRouteDTO,
-    HyperRouteDTO,
-    isHyperRouteDTO,
-} from "../../hyperstack/dto/HyperRouteDTO";
+    explainRouteDTO,
+    RouteDTO,
+    isRouteDTO,
+} from "../../hyperstack/dto/RouteDTO";
 import {
-    explainHyperViewDTO,
-    HyperViewDTO,
-    isHyperViewDTO,
-} from "../../hyperstack/dto/HyperViewDTO";
+    explainViewDTO,
+    ViewDTO,
+    isViewDTO,
+} from "../../hyperstack/dto/ViewDTO";
 import { createLoadingAppDefinition } from "../../hyperstack/samples/loading/LoadingAppDefinition";
 import {
-    HyperServiceDestructor,
-    HyperServiceEvent,
-} from "./HyperService";
+    AppServiceDestructor,
+    AppServiceEvent,
+} from "./AppServiceType";
 
-const LOG = LogService.createLogger( 'HyperServiceImpl' );
+const LOG = LogService.createLogger( 'AppServiceImpl' );
 
 /**
- * Frontend service to control Hyper application state.
+ * Frontend service to control running Hyper application state.
+ *
+ * @see AppServiceType for static public interface type.
  */
-export class HyperServiceImpl {
+export class AppServiceImpl {
 
     /**
      * Default app definitions when the cached copy is not available.
      *
      * @private
      */
-    private static _loadingApp : HyperDTO = createLoadingAppDefinition(
+    private static _loadingApp : AppDTO = createLoadingAppDefinition(
         'LoadingApp',
         '',
         'en',
@@ -80,7 +82,7 @@ export class HyperServiceImpl {
      *
      * @private
      */
-    private static _appDefinition : HyperDTO | undefined = undefined;
+    private static _appDefinition : AppDTO | undefined = undefined;
     private static _appDefinitionTime : number | undefined = undefined;
 
     /**
@@ -88,14 +90,14 @@ export class HyperServiceImpl {
      *
      * @private
      */
-    private static _observer: Observer<HyperServiceEvent> = new Observer<HyperServiceEvent>( "HyperServiceImpl" );
+    private static _observer: Observer<AppServiceEvent> = new Observer<AppServiceEvent>( "AppServiceImpl" );
 
-    public static Event = HyperServiceEvent;
+    public static Event = AppServiceEvent;
 
     public static on (
-        name: HyperServiceEvent,
-        callback: ObserverCallback<HyperServiceEvent>
-    ): HyperServiceDestructor {
+        name: AppServiceEvent,
+        callback: ObserverCallback<AppServiceEvent>
+    ): AppServiceDestructor {
         return this._observer.listenEvent( name, callback );
     }
 
@@ -109,8 +111,8 @@ export class HyperServiceImpl {
 
     public static updateApp (name : string) : void {
 
-        if (this._observer.hasCallbacks(HyperServiceEvent.UPDATE_APP)) {
-            this._observer.triggerEvent( HyperServiceEvent.UPDATE_APP, name );
+        if (this._observer.hasCallbacks(AppServiceEvent.UPDATE_APP)) {
+            this._observer.triggerEvent( AppServiceEvent.UPDATE_APP, name );
             LOG.debug(`App updated: `, name);
         } else {
             LOG.warn(`App updated: ${name}; But nothing listening events for HyperServiceEvent.UPDATE_APP`);
@@ -123,13 +125,13 @@ export class HyperServiceImpl {
     }
 
     public static updateView (name : string) : void {
-        const view : HyperViewDTO | undefined = this.findView(name);
+        const view : ViewDTO | undefined = this.findView(name);
         if (view !== undefined) {
 
             LOG.debug(`updateView: View "${name}": `, view);
 
-            if (this._observer.hasCallbacks(HyperServiceEvent.UPDATE_VIEW)) {
-                this._observer.triggerEvent(HyperServiceEvent.UPDATE_VIEW, name);
+            if (this._observer.hasCallbacks(AppServiceEvent.UPDATE_VIEW)) {
+                this._observer.triggerEvent(AppServiceEvent.UPDATE_VIEW, name);
                 LOG.debug(`updateView: View updated: ${name}`);
             } else {
                 LOG.warn(`updateView: View updated: ${name}; But nothing was listening for HyperServiceEvent.UPDATE_VIEW`);
@@ -161,38 +163,38 @@ export class HyperServiceImpl {
     }
 
     public static hasView (name : string) : boolean {
-        return some(this._appDefinition?.views, (item: HyperViewDTO) : boolean => item.name === name);
+        return some(this._appDefinition?.views, (item: ViewDTO) : boolean => item.name === name);
     }
 
-    public static findView (name : string) : HyperViewDTO | undefined {
+    public static findView (name : string) : ViewDTO | undefined {
         if (!this._appDefinition) return undefined;
         return this._findView(this._appDefinition, name);
     }
 
     public static _findView (
-        dto : HyperDTO,
+        dto : AppDTO,
         name : string,
-    ) : HyperViewDTO | undefined {
+    ) : ViewDTO | undefined {
         return find(
             dto.views,
-            (item: HyperViewDTO) : boolean => item.name === name
+            (item: ViewDTO) : boolean => item.name === name
         );
     }
 
     public static findViewParents (
         name : string
-    ) : readonly HyperViewDTO[] {
+    ) : readonly ViewDTO[] {
         if (!this._appDefinition) return [];
         return this._findViewParents(this._appDefinition, name);
     }
 
     public static _findViewParents (
-        dto : HyperDTO,
+        dto : AppDTO,
         name : string,
-    ) : readonly HyperViewDTO[] {
-        let view : HyperViewDTO | undefined = this._findView(dto, name);
+    ) : readonly ViewDTO[] {
+        let view : ViewDTO | undefined = this._findView(dto, name);
         if (view === undefined) return [];
-        const views : HyperViewDTO[] = [];
+        const views : ViewDTO[] = [];
         while ( view && view.extend && view.extend !== view.name ) {
             view = this._findView(dto, view.extend);
             if (view) {
@@ -204,9 +206,9 @@ export class HyperServiceImpl {
     }
 
     public static _removeViewsAndParents (
-        dto : HyperDTO,
+        dto : AppDTO,
         names : readonly string[],
-    ) : HyperDTO {
+    ) : AppDTO {
 
         const views : readonly string[] = reduce(
             names,
@@ -215,18 +217,18 @@ export class HyperServiceImpl {
                 name,
                 ...map(
                     this._findViewParents(dto, name),
-                    (item : HyperViewDTO) : string => item.name,
+                    (item : ViewDTO) : string => item.name,
                 ),
             ],
             []
         );
         LOG.debug(`_removeViewsAndParents(${names.join(', ')}): Removing views: `, views);
 
-        const newDto : HyperDTO = {
+        const newDto : AppDTO = {
             ...dto,
             views: filter(
                 dto.views,
-                (item: HyperViewDTO) : boolean => !views.includes(item.name),
+                (item: ViewDTO) : boolean => !views.includes(item.name),
             ),
         };
 
@@ -240,8 +242,8 @@ export class HyperServiceImpl {
 
     public static activateView (name : string) : void {
         this._activeViews.push(name);
-        if (this._observer.hasCallbacks(HyperServiceEvent.ACTIVATE_VIEW)) {
-            this._observer.triggerEvent( HyperServiceEvent.ACTIVATE_VIEW, name );
+        if (this._observer.hasCallbacks(AppServiceEvent.ACTIVATE_VIEW)) {
+            this._observer.triggerEvent( AppServiceEvent.ACTIVATE_VIEW, name );
             LOG.debug(`View activated: `, name);
         } else {
             LOG.warn(`View activated: ${name}; But nothing listening events for HyperServiceEvent.ACTIVATE_VIEW`);
@@ -259,8 +261,8 @@ export class HyperServiceImpl {
             (_item: string, i : number) : boolean => i !== removeIndex
         );
 
-        if (this._observer.hasCallbacks(HyperServiceEvent.DEACTIVATE_VIEW)) {
-            this._observer.triggerEvent( HyperServiceEvent.DEACTIVATE_VIEW, name );
+        if (this._observer.hasCallbacks(AppServiceEvent.DEACTIVATE_VIEW)) {
+            this._observer.triggerEvent( AppServiceEvent.DEACTIVATE_VIEW, name );
             LOG.debug(`View deactivated: `, name);
         } else {
             LOG.warn(`View deactivated: ${name}; But nothing listening events for HyperServiceEvent.DEACTIVATE_VIEW`);
@@ -268,35 +270,35 @@ export class HyperServiceImpl {
 
     }
 
-    public static getAppDefinitions () : HyperDTO {
+    public static getAppDefinitions () : AppDTO {
         return this._appDefinition ?? this._loadingApp;
     }
 
-    public static _setAppDefinitions (dto : HyperDTO) : void {
+    public static _setAppDefinitions (dto : AppDTO) : void {
         if (!isEqual(this._appDefinition, dto)) {
             this._appDefinition = dto;
             this._appDefinitionTime = new Date().getTime();
             LOG.debug(`_setAppDefinitions: App definitions changed to: `, dto);
-            if (this._observer.hasCallbacks(HyperServiceEvent.APP_DEFINITIONS_UPDATED)) {
-                this._observer.triggerEvent(HyperServiceEvent.APP_DEFINITIONS_UPDATED);
+            if (this._observer.hasCallbacks(AppServiceEvent.APP_DEFINITIONS_UPDATED)) {
+                this._observer.triggerEvent(AppServiceEvent.APP_DEFINITIONS_UPDATED);
             }
         } else {
             LOG.debug(`_setAppDefinitions: Nothing to change`);
         }
     }
 
-    public static async setAppDefinitions (dto : HyperDTO) : Promise<void> {
-        dto = await this._populateHyperDTO(dto, dto?.publicUrl);
+    public static async setAppDefinitions (dto : AppDTO) : Promise<void> {
+        dto = await this._populateAppDTO(dto, dto?.publicUrl);
         this._setAppDefinitions(dto);
     }
 
     public static async updateAppDefinitions (
-        dto : HyperDTO,
+        dto : AppDTO,
         refreshViews: readonly string[],
     ) : Promise<void> {
 
         if (this._appDefinition) {
-            const origDefinition : HyperDTO = refreshViews.length ? this._removeViewsAndParents(this._appDefinition, refreshViews) : this._appDefinition;
+            const origDefinition : AppDTO = refreshViews.length ? this._removeViewsAndParents(this._appDefinition, refreshViews) : this._appDefinition;
 
             dto = {
                 ...dto,
@@ -324,13 +326,13 @@ export class HyperServiceImpl {
             };
         }
 
-        dto = await this._populateHyperDTO(dto, dto?.publicUrl);
+        dto = await this._populateAppDTO(dto, dto?.publicUrl);
 
         if (!isEqual(this._appDefinition, dto)) {
             this._appDefinition = dto;
             this._appDefinitionTime = new Date().getTime();
-            if (this._observer.hasCallbacks(HyperServiceEvent.APP_DEFINITIONS_UPDATED)) {
-                this._observer.triggerEvent(HyperServiceEvent.APP_DEFINITIONS_UPDATED);
+            if (this._observer.hasCallbacks(AppServiceEvent.APP_DEFINITIONS_UPDATED)) {
+                this._observer.triggerEvent(AppServiceEvent.APP_DEFINITIONS_UPDATED);
             }
             LOG.debug(`updateAppDefinitions: Updated: `, dto);
         } else {
@@ -339,38 +341,38 @@ export class HyperServiceImpl {
     }
 
     public static getRoutePathByRouteName ( name : string) : string | undefined {
-        const routes : readonly HyperRouteDTO[] = this._appDefinition?.routes ?? [];
-        const route : HyperRouteDTO | undefined = find(
+        const routes : readonly RouteDTO[] = this._appDefinition?.routes ?? [];
+        const route : RouteDTO | undefined = find(
             routes,
-            (item: HyperRouteDTO) : boolean => item.name === name
+            (item: RouteDTO) : boolean => item.name === name
         );
         return route?.path ? route.path : undefined;
     }
 
     public static getRoutePathByViewName ( name : string) : string | undefined {
-        const routes : readonly HyperRouteDTO[] = this._appDefinition?.routes ?? [];
-        const route : HyperRouteDTO | undefined = find(
+        const routes : readonly RouteDTO[] = this._appDefinition?.routes ?? [];
+        const route : RouteDTO | undefined = find(
             routes,
-            (item: HyperRouteDTO) : boolean => item.view === name
+            (item: RouteDTO) : boolean => item.view === name
         );
         return route?.path ? route.path : undefined;
     }
 
-    public static saveViewDTO (dto : HyperViewDTO) : void {
+    public static saveViewDTO (dto : ViewDTO) : void {
 
         LOG.debug(`Saving view DTO: `, dto);
 
-        const appDto : HyperDTO = {
+        const appDto : AppDTO = {
             ...(this._appDefinition ? {
                 ...this._appDefinition,
                 views: [
                     ...filter(
                         this._appDefinition.views,
-                        (view: HyperViewDTO) : boolean => view.name !== dto.name
+                        (view: ViewDTO) : boolean => view.name !== dto.name
                     ),
                     dto,
                 ]
-            } : createHyperDTO(
+            } : createAppDTO(
                 '',
                 undefined,
                 [],
@@ -391,8 +393,8 @@ export class HyperServiceImpl {
         if (this._url !== url) {
             LOG.debug(`URL changed to: `, url);
             this._url = url;
-            if (this._observer.hasCallbacks(HyperServiceEvent.APP_URL_UPDATED)) {
-                this._observer.triggerEvent(HyperServiceEvent.APP_URL_UPDATED);
+            if (this._observer.hasCallbacks(AppServiceEvent.APP_URL_UPDATED)) {
+                this._observer.triggerEvent(AppServiceEvent.APP_URL_UPDATED);
             }
             this._updateFromUrlSync([]);
         }
@@ -406,8 +408,8 @@ export class HyperServiceImpl {
         if (this._url !== undefined) {
             LOG.debug(`URL removed: `, this._url);
             this._url = undefined;
-            if (this._observer.hasCallbacks(HyperServiceEvent.APP_URL_UPDATED)) {
-                this._observer.triggerEvent(HyperServiceEvent.APP_URL_UPDATED);
+            if (this._observer.hasCallbacks(AppServiceEvent.APP_URL_UPDATED)) {
+                this._observer.triggerEvent(AppServiceEvent.APP_URL_UPDATED);
             }
         }
     }
@@ -430,8 +432,8 @@ export class HyperServiceImpl {
     ) : Promise<void> {
         try {
             const result : ReadonlyJsonAny | undefined = await HttpService.getJson(url);
-            if ( !isHyperDTO( result ) ) {
-                LOG.error( `_updateFromUrl("${ url }"): Response was not HyperDTO: ${ explainHyperDTO( result ) }: `, result );
+            if ( !isAppDTO( result ) ) {
+                LOG.error( `_updateFromUrl("${ url }"): Response was not AppDTO: ${ explainAppDTO( result ) }: `, result );
             } else {
 
                 if ( this._appDefinition === undefined || !this.isAppLoaded(result.name) ) {
@@ -456,10 +458,10 @@ export class HyperServiceImpl {
         }
     }
 
-    private static async _populateHyperDTO (
-        dto: HyperDTO,
+    private static async _populateAppDTO (
+        dto: AppDTO,
         baseUrl: string | undefined = undefined,
-    ): Promise<HyperDTO> {
+    ): Promise<AppDTO> {
         baseUrl = baseUrl ?? dto.publicUrl ?? '';
 
         const newViewsPromise = this._fetchMissingViews(dto.views, baseUrl);
@@ -479,10 +481,10 @@ export class HyperServiceImpl {
     }
 
     private static async _fetchMissingViews (
-        views: readonly HyperViewDTO[],
+        views: readonly ViewDTO[],
         baseUrl: string,
-    ) : Promise<HyperViewDTO[]> {
-        let newViews : HyperViewDTO[] = [];
+    ) : Promise<ViewDTO[]> {
+        let newViews : ViewDTO[] = [];
         for (const view of views) {
 
             let extend: string | undefined = view.extend;
@@ -504,20 +506,20 @@ export class HyperServiceImpl {
                 // Skip if we already have the resource
                 if (some(
                     [...newViews, ...views],
-                    (item: HyperViewDTO) : boolean => item.name === extend
+                    (item: ViewDTO) : boolean => item.name === extend
                 )) {
                     continue;
                 }
 
                 // Fetch missing resources
-                const response: ReadonlyJsonAny | HyperViewDTO | undefined = await HttpService.getJson(extend);
-                if ( isHyperViewDTO(response) ) {
+                const response: ReadonlyJsonAny | ViewDTO | undefined = await HttpService.getJson(extend);
+                if ( isViewDTO(response) ) {
                     newViews.push( {
-                        ...(response as HyperViewDTO),
+                        ...(response as ViewDTO),
                         name: extend,
                     } );
                 } else {
-                    LOG.debug( `response: ${explainHyperViewDTO(response)}: `, response );
+                    LOG.debug( `response: ${explainViewDTO(response)}: `, response );
                     throw new TypeError( `Response was not HyperViewDTO` );
                 }
 
@@ -529,10 +531,10 @@ export class HyperServiceImpl {
     }
 
     private static async _fetchMissingComponents (
-        components : readonly HyperComponentDTO[],
+        components : readonly ComponentDTO[],
         baseUrl : string,
-    ) : Promise<HyperComponentDTO[]> {
-        let newComponents : HyperComponentDTO[] = [];
+    ) : Promise<ComponentDTO[]> {
+        let newComponents : ComponentDTO[] = [];
         for (const component of components) {
             newComponents.push(component);
             let extend: string | undefined = component.extend;
@@ -548,20 +550,20 @@ export class HyperServiceImpl {
                 // Skip if we already have the resource
                 if (some(
                     [...newComponents, ...components],
-                    (item: HyperComponentDTO) : boolean => item.name === extend
+                    (item: ComponentDTO) : boolean => item.name === extend
                 )) {
                     continue;
                 }
 
                 // Fetch missing resources
                 const response: ReadonlyJsonAny | undefined = await HttpService.getJson(extend);
-                if ( isHyperComponentDTO( response ) ) {
+                if ( isComponentDTO( response ) ) {
                     newComponents.push( {
-                        ...(response as HyperComponentDTO),
+                        ...(response as ComponentDTO),
                         name: extend
                     } );
                 } else {
-                    LOG.debug( `response: ${explainHyperComponentDTO( response )}: `, response );
+                    LOG.debug( `response: ${explainComponentDTO( response )}: `, response );
                     throw new TypeError( `Response was not HyperComponentDTO` );
                 }
 
@@ -571,10 +573,10 @@ export class HyperServiceImpl {
     }
 
     private static async _fetchMissingRoutes (
-        routes : readonly HyperRouteDTO[],
+        routes : readonly RouteDTO[],
         baseUrl: string,
-    ): Promise<HyperRouteDTO[]> {
-        let newRoutes : HyperRouteDTO[] = [];
+    ): Promise<RouteDTO[]> {
+        let newRoutes : RouteDTO[] = [];
         for (const route of routes) {
             newRoutes.push(route);
             let extend: string | undefined = route.extend;
@@ -590,20 +592,20 @@ export class HyperServiceImpl {
                 // Skip if we already have the resource
                 if (some(
                     [...newRoutes, ...routes],
-                    (item: HyperRouteDTO) : boolean => item.name === extend
+                    (item: RouteDTO) : boolean => item.name === extend
                 )) {
                     continue;
                 }
 
                 // Fetch missing resources
                 const response: ReadonlyJsonAny | undefined = await HttpService.getJson(extend);
-                if ( isHyperRouteDTO( response ) ) {
+                if ( isRouteDTO( response ) ) {
                     newRoutes.push( {
-                        ...(response as HyperRouteDTO),
+                        ...(response as RouteDTO),
                         name: extend
                     } );
                 } else {
-                    LOG.debug( `response: ${explainHyperRouteDTO( response )}: `, response );
+                    LOG.debug( `response: ${explainRouteDTO( response )}: `, response );
                     throw new TypeError( `Response was not HyperRouteDTO` );
                 }
                 newRoutes.push(response);
@@ -612,6 +614,5 @@ export class HyperServiceImpl {
         }
         return newRoutes;
     }
-
 
 }

@@ -6,8 +6,8 @@ import { ReadonlyJsonAny } from "../../../hg/core/Json";
 import { LogService } from "../../../hg/core/LogService";
 import { isString } from "../../../hg/core/types/String";
 import { RefreshCallback, useAsyncResource } from "../../../hg/frontend/hooks/useAsyncResource";
-import { explainHyperDTO, HyperDTO, isHyperDTO } from "../../hyperstack/dto/HyperDTO";
-import { populateHyperDTO } from "../../hyperstack/utils/populateHyperDTO";
+import { explainAppDTO, AppDTO, isAppDTO } from "../../hyperstack/dto/AppDTO";
+import { populateAppDTO } from "../../hyperstack/utils/populateAppDTO";
 
 const LOG = LogService.createLogger( 'useHyperDefinitions' );
 
@@ -17,26 +17,26 @@ const LOG = LogService.createLogger( 'useHyperDefinitions' );
  * @deprecated Use HyperServiceImpl directly.
  */
 export function useHyperDefinitions (
-    definitions : HyperDTO | string
-) : [HyperDTO | null | undefined, RefreshCallback] {
-    const callback = useCallback( async () : Promise<HyperDTO> => {
+    definitions : AppDTO | string
+) : [AppDTO | null | undefined, RefreshCallback] {
+    const callback = useCallback( async () : Promise<AppDTO> => {
 
         if (!isString(definitions)) {
             LOG.debug(`Refreshing DTO object:`, definitions);
-            return await populateHyperDTO(definitions);
+            return await populateAppDTO(definitions);
         }
 
         LOG.debug(`Fetching definition from URL:`, definitions);
         const result : ReadonlyJsonAny | undefined = await HttpService.getJson(definitions);
-        if (!isHyperDTO(result)) {
-            throw new TypeError(`The response was not HyperDTO: ${explainHyperDTO(result)}`)
+        if (!isAppDTO(result)) {
+            throw new TypeError(`The response was not HyperDTO: ${explainAppDTO(result)}`)
         }
 
         LOG.debug(`Refreshing received DTO object:`, result);
-        return await populateHyperDTO(result, result?.publicUrl ?? definitions);
+        return await populateAppDTO(result, result?.publicUrl ?? definitions);
 
     }, [
         definitions
     ]);
-    return useAsyncResource<HyperDTO>( callback );
+    return useAsyncResource<AppDTO>( callback );
 }
