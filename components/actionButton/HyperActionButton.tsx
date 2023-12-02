@@ -13,10 +13,12 @@ import {
     ActionDTO,
     isActionDTO,
 } from "../../../hyperstack/dto/ActionDTO";
+import { StyleDTO } from "../../../hyperstack/dto/StyleDTO";
 import {
     ViewDTO,
     isViewDTO,
 } from "../../../hyperstack/dto/ViewDTO";
+import { StyleEntity } from "../../../hyperstack/entities/StyleEntity";
 import { AppServiceImpl } from "../../services/AppServiceImpl";
 import { PropsWithClassName } from "../types/PropsWithClassName";
 import "./HyperActionButton.scss";
@@ -35,6 +37,7 @@ export interface HyperActionButtonProps
     readonly body      ?: ReadonlyJsonAny | undefined;
     readonly successRedirect ?: string | ActionDTO | undefined;
     readonly failureRedirect ?: string | ActionDTO | undefined;
+    readonly style     ?: StyleDTO;
 }
 
 async function doRequest (
@@ -163,6 +166,7 @@ async function handleRedirect (
 export function HyperActionButton (props: HyperActionButtonProps) {
 
     const className = props?.className;
+    const style = props?.style;
     const children = props?.children;
     const method = props?.method ?? "post";
     const target = props?.target;
@@ -209,6 +213,7 @@ export function HyperActionButton (props: HyperActionButtonProps) {
 
     return (
         <Button
+            css={ StyleEntity.createFromDTO(style).getCssStyles() }
             click={clickCallback}
             className={HYPER_ARTICLE_CLASS_NAME + (className ? ` ${className}` : "")}
         >{children}</Button>
