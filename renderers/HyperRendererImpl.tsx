@@ -424,10 +424,10 @@ export class HyperRendererImpl implements HyperRenderer {
 
             if (populatedComponent.name === HyperComponent.Image) {
                 return (
-                    <img src={ isString(populatedComponent.meta?.src) ? populatedComponent.meta?.src : '#' }
+                    <img src={ isString(populatedComponent.meta?.source) ? populatedComponent.meta?.source : '#' }
                          alt={ isString(populatedComponent.meta?.alt) ? populatedComponent.meta?.alt : '' }
                          style={ StyleEntity.createFromDTO(populatedComponent.style).getCssStyles() }
-                    >{HyperRendererImpl.defaultRenderContent(renderer, content.content, definitions)}</img>
+                    />
                 );
             }
 

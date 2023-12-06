@@ -454,7 +454,7 @@ export class AppServiceImpl {
 
             }
         } catch (err) {
-            LOG.error(`_updateFromUrl("${url}"): Could not update: `, url);
+            LOG.error(`_updateFromUrl("${url}"): Could not update "${url}": `, err);
         }
     }
 
@@ -519,8 +519,8 @@ export class AppServiceImpl {
                         name: extend,
                     } );
                 } else {
-                    LOG.debug( `response: ${explainViewDTO(response)}: `, response );
-                    throw new TypeError( `Response was not HyperViewDTO` );
+                    LOG.warn( `Response invalid: ${explainViewDTO(response)}: `, response );
+                    throw new TypeError( `Response was not ViewDTO: ${explainViewDTO(response)}` );
                 }
 
             } else {
