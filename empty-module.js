@@ -1,1 +1,0 @@
-// acts as a mock for the SCSS files
